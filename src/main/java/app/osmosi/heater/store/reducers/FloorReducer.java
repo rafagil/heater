@@ -13,7 +13,7 @@ public class FloorReducer implements Reducer<Floor> {
 
     @Override
     public Floor reduce(Action action, Floor state) {
-        if (action instanceof FloorUpdateAction fua && name == fua.getData().getName()) {
+        if (action instanceof FloorUpdateAction fua && name.equals(fua.getData().getName())) {
             return fua.getData();
         }
         return state;

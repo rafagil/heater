@@ -10,6 +10,14 @@ import app.osmosi.heater.store.Store;
 
 public class Sonoff implements Adapter {
 
+    private void syncFloor(Floor f) {
+        if (f.getHeaterState() == Switch.ON) {
+            turnOn(f.getSonoffChannel());
+        } else {
+            turnOff(f.getSonoffChannel());
+        }
+    }
+
     private void turnOn(int sonoffChannel) {
         System.out.println("Turning ON channel " + sonoffChannel);
     }
@@ -37,5 +45,10 @@ public class Sonoff implements Adapter {
         store.subscribe(s -> s.getBaixo().getHeaterState(), appState -> handleFloor.accept(appState.getBaixo()));
         store.subscribe(s -> s.getCima().getHeaterState(), appState -> handleFloor.accept(appState.getCima()));
         store.subscribe(s -> s.getHotWater().getState(), appState -> handleHw.accept(appState.getHotWater()));
+    }
+
+    @Override
+    public void sync(AppState state) {
+        state.getFloors().forEach(f -> syncFloor(f));
     }
 }

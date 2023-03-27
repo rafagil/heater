@@ -8,9 +8,9 @@ public class Floor {
     private Switch heaterState;
     private String mqtt;
     private int sonoffChannel;
-    private float lastUpdate;
+    private long lastUpdate;
 
-    public Floor(String name, double desiredTemp, double setBackTemp, double actualTemp, Switch heaterState, String mqtt, int sonoffChannel, float lastUpdate) {
+    public Floor(String name, double desiredTemp, double setBackTemp, double actualTemp, Switch heaterState, String mqtt, int sonoffChannel, long lastUpdate) {
         this.name = name;
         this.desiredTemp = desiredTemp;
         this.setBackTemp = setBackTemp;
@@ -21,27 +21,33 @@ public class Floor {
         this.lastUpdate = lastUpdate;
     }
 
-    public Floor setActualTemp(double actualTemp) {
+    public Floor withActualTemp(double actualTemp) {
         Floor f = from(this);
         f.actualTemp = actualTemp;
         return f;
     }
 
-    public Floor setDesiredTemp(double desiredTemp) {
+    public Floor withDesiredTemp(double desiredTemp) {
         Floor f = from(this);
         f.desiredTemp = desiredTemp;
         return f;
     }
 
-    public Floor setSetBackTemp(double setBackTemp) {
+    public Floor withSetBackTemp(double setBackTemp) {
         Floor f = from(this);
         f.setBackTemp = setBackTemp;
         return f;
     }
 
-    public Floor setHeaterState(Switch heaterState) {
+    public Floor withHeaterState(Switch heaterState) {
         Floor f = from(this);
         f.heaterState = heaterState;
+        return f;
+    }
+
+    public Floor withLastUpdate(long lastUpdate) {
+        Floor f = from(this);
+        f.lastUpdate = lastUpdate;
         return f;
     }
 
@@ -50,7 +56,7 @@ public class Floor {
                 f.getMqtt(), f.getSonoffChannel(), f.getLastUpdate());
     }
 
-    public float getLastUpdate() {
+    public long getLastUpdate() {
         return lastUpdate;
     }
 
