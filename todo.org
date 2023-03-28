@@ -4,7 +4,7 @@
 * DONE implement mobile notifications
 * TODO Create Env Vars and prepare for Docker
 * TODO Remove getCima and getBaixo methods
-* DOING Create an HttpAdapter configurable via json
+* DOING Create an HttpAdapter configurable via json (need to test the http client)
 	list -> floorName, onURL, offURL
 	maybe use the same for HotWater?
 * DONE Bug see why all switches are off when starting even though they should be on on the saved state

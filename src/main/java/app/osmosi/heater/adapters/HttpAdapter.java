@@ -30,27 +30,26 @@ public class HttpAdapter implements Adapter {
   }
 
   private void doRequest(String urlString, String method, String payload) {
-    System.out.println(method + ": " + urlString + " Payload: " + payload);
-    // try {
-    // URL url = new URL(urlString);
-    // HttpURLConnection con = (HttpURLConnection) url.openConnection();
-    // con.setRequestMethod(method);
-    // con.setRequestProperty("Content-Type", "application/json");
-    //
-    // if (method.equals("POST")) {
-    // DataOutputStream wr;
-    // con.setDoOutput(true);
-    // wr = new DataOutputStream(con.getOutputStream());
-    //
-    // wr.writeBytes(payload);
-    // wr.flush();
-    // wr.close();
-    // }
-    //
-    // con.getResponseCode();
-    // } catch (IOException e) {
-    // e.printStackTrace();
-    // }
+    try {
+      URL url = new URL(urlString);
+      HttpURLConnection con = (HttpURLConnection) url.openConnection();
+      con.setRequestMethod(method);
+      con.setRequestProperty("Content-Type", "application/json");
+
+      if (method.equals("POST")) {
+        DataOutputStream wr;
+        con.setDoOutput(true);
+        wr = new DataOutputStream(con.getOutputStream());
+
+        wr.writeBytes(payload);
+        wr.flush();
+        wr.close();
+      }
+
+      con.getResponseCode();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   private void turnOn(String floorName) {
