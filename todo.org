@@ -1,10 +1,11 @@
 * DONE Monitoring
-* TODO Http Clients for Adapters
+* DONE Http Clients for Adapters
 * TODO cleanup http controllers
 * DONE implement mobile notifications
 * TODO Create Env Vars and prepare for Docker
-* TODO Remove getCima and getBaixo methods
-* DOING Create an HttpAdapter configurable via json (need to test the http client)
+* TODO Remove getCima and getBaixo methods (also sonoff related ones)
+* DONE Create an HttpAdapter configurable via json (need to test the http client)
 	list -> floorName, onURL, offURL
 	maybe use the same for HotWater?
 * DONE Bug see why all switches are off when starting even though they should be on on the saved state
+* TODO make the "subscribe" return just the subscribed state by default (instead of returning the entire AppState)

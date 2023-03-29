@@ -5,7 +5,7 @@ import java.io.IOException;
 import java.util.List;
 
 import app.osmosi.heater.adapters.Adapter;
-import app.osmosi.heater.adapters.HttpAdapter;
+import app.osmosi.heater.adapters.http.HttpAdapter;
 import app.osmosi.heater.model.AppState;
 import app.osmosi.heater.model.Floor;
 import app.osmosi.heater.model.HotWater;
@@ -17,6 +17,7 @@ import app.osmosi.heater.store.actions.FloorUpdateAction;
 import app.osmosi.heater.store.actions.HotWaterUpdateAction;
 import app.osmosi.heater.store.actions.TimerUpdateAction;
 import app.osmosi.heater.store.reducers.AppReducer;
+import app.osmosi.heater.utils.Env;
 
 public class Api {
   private static Store<AppState> store;
@@ -39,7 +40,7 @@ public class Api {
     }
     // Adapters:
     try {
-      HttpAdapter httpAdapter = new HttpAdapter(new File("/projects/heater/config/http-adapter.json"));
+      HttpAdapter httpAdapter = new HttpAdapter(new File(Env.CONFIG_PATH + "/http-adapter.json"));
       adapters = List.of(httpAdapter); // Multiple adapters can be combined here
       adapters.forEach(a -> a.addSubscribers(store));
     } catch (IOException e) {

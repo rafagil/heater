@@ -1,11 +1,10 @@
-package app.osmosi.heater.adapters;
+package app.osmosi.heater.adapters.http;
 
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -14,23 +13,33 @@ import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import app.osmosi.heater.adapters.Adapter;
 import app.osmosi.heater.model.AppState;
 import app.osmosi.heater.model.Floor;
 import app.osmosi.heater.model.Switch;
 import app.osmosi.heater.store.Store;
+import app.osmosi.heater.utils.Env;
 
 public class HttpAdapter implements Adapter {
-  private List<HttpAdapterConfig> adapterConfigs;
-  private Map<String, List<HttpAdapterConfig>> configsByFloorName;
+  private HttpAdapterConfig config;
+  private List<CentralHeatingConfig> centralHeatingConfigs;
+  private Map<String, List<CentralHeatingConfig>> configsByFloorName;
 
   public HttpAdapter(File configFile) throws IOException {
     ObjectMapper om = new ObjectMapper();
-    adapterConfigs = Arrays.asList(om.readValue(configFile, HttpAdapterConfig[].class));
-    configsByFloorName = adapterConfigs.stream()
-        .collect(Collectors.groupingBy(HttpAdapterConfig::getFloorName));
+    config = om.readValue(configFile, HttpAdapterConfig.class);
+    centralHeatingConfigs = config.getCentralHeating();
+    configsByFloorName = centralHeatingConfigs.stream()
+        .collect(Collectors.groupingBy(CentralHeatingConfig::getFloorName));
   }
 
   private void doRequest(String urlString, String method, String payload) {
+    if (Env.DEBUG) {
+      System.out.println(method + ": " + urlString);
+      if (payload != null) {
+        System.out.println(payload);
+      }
+    }
     try {
       URL url = new URL(urlString);
       HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -52,44 +61,38 @@ public class HttpAdapter implements Adapter {
     }
   }
 
-  private void turnOn(String floorName) {
-    Optional.ofNullable(configsByFloorName.get(floorName))
-        .orElse(List.of())
-        .forEach(c -> doRequest(c.getOnURL(), c.getMethod(), c.getOnPayload()));
+  private void handleSwitch(Switch state, RequestConfig config) {
+    if (state == Switch.ON) {
+      doRequest(config.getOnURL(), config.getMethod(), config.getOnPayload());
+    } else {
+      doRequest(config.getOffURL(), config.getMethod(), config.getOffPayload());
+    }
   }
 
-  private void turnOff(String floorName) {
-    Optional.ofNullable(configsByFloorName.get(floorName))
+  private void handleFloor(Floor f) {
+    Optional.ofNullable(configsByFloorName.get(f.getName()))
         .orElse(List.of())
-        .forEach(c -> doRequest(c.getOffURL(), c.getMethod(), c.getOffPayload()));
+        .forEach(c -> handleSwitch(f.getHeaterState(), c.getRequest()));
   }
 
   @Override
   public void addSubscribers(Store<AppState> store) {
-    Consumer<Floor> handleFloor = f -> {
-      if (f.getHeaterState() == Switch.ON) {
-        turnOn(f.getName());
-      } else {
-        turnOff(f.getName());
-      }
-    };
     Consumer<String> addSubscriber = name -> {
       store.subscribe(s -> s.getFloorByName(name).getHeaterState(),
-          appState -> handleFloor.accept(appState.getFloorByName(name)));
+          appState -> handleFloor(appState.getFloorByName(name)));
     };
+
+    // Adds Central Heating Subscribers
     configsByFloorName.keySet().forEach(addSubscriber);
+
+    // Adds HotWater Subscriber
+    store.subscribe(s -> s.getHotWater().getState(),
+        s -> handleSwitch(s.getHotWater().getState(), config.getHotWater()));
   }
 
   @Override
   public void sync(AppState state) {
-    Consumer<Floor> syncFloor = f -> {
-      if (f.getHeaterState() == Switch.ON) {
-        turnOn(f.getName());
-      } else {
-        turnOff(f.getName());
-      }
-    };
-    state.getFloors().forEach(syncFloor);
+    state.getFloors().forEach(this::handleFloor);
   }
 
 }
