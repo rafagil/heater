@@ -1,0 +1,30 @@
+[
+  {
+    "floorName": "Upper",
+    "onURL": "upperSonoff.com/ON",
+    "offURL": "upperSonoff.com/OFF",
+    "method": "POST",
+    "onPayload": "onPayload",
+    "offPayload": "offPayload"
+  },
+  {
+    "floorName": "Lower",
+    "onURL": "lowerSonoff.com/ON",
+    "offURL": "lowerSonoff.com/OFF",
+    "method": "POST",
+    "onPayload": "onpay",
+    "offPayload": "offpay"
+  },
+  {
+    "floorName": "Upper",
+    "onURL": "upperTasmota.com/ON",
+    "offURL": "upperTasmota.com/OFF",
+    "method": "GET"
+  },
+  {
+    "floorName": "Lower",
+    "onURL": "lowerTasmopta.com/ON",
+    "offURL": "lowerTasmopta.com/OFF",
+    "method": "GET"
+  }
+]

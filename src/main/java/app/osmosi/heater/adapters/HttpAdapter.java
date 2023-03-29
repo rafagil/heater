@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -40,25 +41,26 @@ public class HttpAdapter implements Adapter {
         DataOutputStream wr;
         con.setDoOutput(true);
         wr = new DataOutputStream(con.getOutputStream());
-
         wr.writeBytes(payload);
         wr.flush();
         wr.close();
       }
 
-      con.getResponseCode();
+      con.disconnect();
     } catch (IOException e) {
       e.printStackTrace();
     }
   }
 
   private void turnOn(String floorName) {
-    configsByFloorName.get(floorName)
+    Optional.ofNullable(configsByFloorName.get(floorName))
+        .orElse(List.of())
         .forEach(c -> doRequest(c.getOnURL(), c.getMethod(), c.getOnPayload()));
   }
 
   private void turnOff(String floorName) {
-    configsByFloorName.get(floorName)
+    Optional.ofNullable(configsByFloorName.get(floorName))
+        .orElse(List.of())
         .forEach(c -> doRequest(c.getOffURL(), c.getMethod(), c.getOffPayload()));
   }
 

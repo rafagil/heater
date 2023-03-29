@@ -1,5 +1,7 @@
 *.class
 db/*
-config/*
+config/http-adapter.json
+config/hw-timers.csv
+config/schedule.csv
 target/*
 .settings/*
