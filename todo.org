@@ -9,3 +9,4 @@
 	maybe use the same for HotWater?
 * DONE Bug see why all switches are off when starting even though they should be on on the saved state
 * TODO make the "subscribe" return just the subscribed state by default (instead of returning the entire AppState)
+* TODO Add proper Logging (instead of System.out.println)

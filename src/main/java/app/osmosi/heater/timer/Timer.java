@@ -47,7 +47,7 @@ public class Timer {
       AppState state = Api.getCurrentState();
       Optional<HotWaterTimer> timer = findTimer(getNowMinutes(), state.getTimers());
       if (timer.isPresent()) {
-        Api.turnOnWotWater(timer.get().getTimeout());
+        Api.turnOnHotWater(timer.get().getTimeout());
       }
     }, 30000);
     new Thread(intervalThread).start();

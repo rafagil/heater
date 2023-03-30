@@ -26,6 +26,13 @@ public class Api {
   private Api() {
   }
 
+  public static void init(Store<AppState> store, List<Adapter> adapters) {
+    Api.store = store;
+    Api.adapters = adapters;
+    // Adapters:
+    adapters.forEach(a -> a.addSubscribers(store));
+  }
+
   public static void init() {
     AppReducer reducer = new AppReducer();
     try {
@@ -61,19 +68,19 @@ public class Api {
     return f.withHeaterState(Switch.OFF);
   }
 
-  public static void turnOnWotWater(final int minutes) {
-    final long instanceId = store.getState().getHotWater().getInstanceId();
+  public static void turnOnHotWater(final int timeoutMs) {
     store.dispatch(new HotWaterUpdateAction(new HotWater(Switch.ON)));
-    System.out.println("Hot water is ON");
+    final long instanceId = store.getState().getHotWater().getInstanceId();
+    System.out.println("Hot water is ON for " + (timeoutMs / 60 / 1000) + " minutes");
     new Thread(() -> {
       try {
-        Thread.sleep(60 * 1000 * minutes);
+        Thread.sleep(timeoutMs);
       } catch (InterruptedException e) {
       }
       if (instanceId == store.getState().getHotWater().getInstanceId()) {
         turnOffHotWater();
       }
-    });
+    }).start();
   }
 
   public static void turnOffHotWater() {

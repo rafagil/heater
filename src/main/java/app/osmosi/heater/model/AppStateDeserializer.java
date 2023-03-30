@@ -33,7 +33,7 @@ public class AppStateDeserializer extends StdDeserializer<AppState> {
   }
 
   private HotWater parseHotWater(JsonNode node) {
-    Switch state = Switch.OFF;
+    Switch state = Switch.OFF; // Hot Water should never start "ON"
     return new HotWater(state);
   }
 

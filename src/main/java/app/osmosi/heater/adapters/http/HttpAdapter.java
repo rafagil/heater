@@ -19,6 +19,7 @@ import app.osmosi.heater.model.Floor;
 import app.osmosi.heater.model.Switch;
 import app.osmosi.heater.store.Store;
 import app.osmosi.heater.utils.Env;
+import app.osmosi.heater.utils.MobileNotification;
 
 public class HttpAdapter implements Adapter {
   private HttpAdapterConfig config;
@@ -39,25 +40,32 @@ public class HttpAdapter implements Adapter {
       if (payload != null) {
         System.out.println(payload);
       }
-    }
-    try {
-      URL url = new URL(urlString);
-      HttpURLConnection con = (HttpURLConnection) url.openConnection();
-      con.setRequestMethod(method);
-      con.setRequestProperty("Content-Type", "application/json");
+    } else {
+      try {
+        URL url = new URL(urlString);
+        HttpURLConnection con = (HttpURLConnection) url.openConnection();
+        con.setRequestMethod(method);
+        con.setRequestProperty("Content-Type", "application/json");
 
-      if (method.equals("POST")) {
-        DataOutputStream wr;
-        con.setDoOutput(true);
-        wr = new DataOutputStream(con.getOutputStream());
-        wr.writeBytes(payload);
-        wr.flush();
-        wr.close();
+        if (method.equals("POST")) {
+          DataOutputStream wr;
+          con.setDoOutput(true);
+          wr = new DataOutputStream(con.getOutputStream());
+          wr.writeBytes(payload);
+          wr.flush();
+          wr.close();
+          System.out.println("Payload sent:");
+          System.out.println(payload);
+        }
+
+        System.out.println("Response Code:");
+        System.out.println(con.getResponseCode());
+
+        con.disconnect();
+      } catch (IOException e) {
+        MobileNotification.sendNotification("Unable to request the adapter");
+        e.printStackTrace();
       }
-
-      con.disconnect();
-    } catch (IOException e) {
-      e.printStackTrace();
     }
   }
 
@@ -93,6 +101,7 @@ public class HttpAdapter implements Adapter {
   @Override
   public void sync(AppState state) {
     state.getFloors().forEach(this::handleFloor);
+    handleSwitch(state.getHotWater().getState(), config.getHotWater());
   }
 
 }
