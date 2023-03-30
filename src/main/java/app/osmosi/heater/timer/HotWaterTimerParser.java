@@ -14,26 +14,26 @@ import app.osmosi.heater.utils.FileUtils;
 
 public class HotWaterTimerParser {
 
-    private static Predicate<String> comments = l -> !l.startsWith("#");
-    private static Function<String, HotWaterTimer> toTimer = l -> {
-        String[] items = l.trim().split(",");
-        Integer hours = Integer.valueOf(items[0].trim());
-        Integer minutes = Integer.valueOf(items[1].trim());
-        Integer timeout = Integer.valueOf(items[2].trim());
-        return new HotWaterTimer(hours, minutes, timeout, 0);
-    };
+  private static Predicate<String> comments = l -> !l.startsWith("#");
+  private static Function<String, HotWaterTimer> toTimer = l -> {
+    String[] items = l.trim().split(",");
+    Integer hours = Integer.valueOf(items[0].trim());
+    Integer minutes = Integer.valueOf(items[1].trim());
+    Integer timeout = Integer.valueOf(items[2].trim()) * 60 * 1000;
+    return new HotWaterTimer(hours, minutes, timeout, 0);
+  };
 
-    public static List<HotWaterTimer> parse(Stream<String> lines) {
-        return lines
-            .filter(comments)
-            .map(toTimer)
-            .collect(Collectors.toList());
-    }
+  public static List<HotWaterTimer> parse(Stream<String> lines) {
+    return lines
+        .filter(comments)
+        .map(toTimer)
+        .collect(Collectors.toList());
+  }
 
-    public static List<HotWaterTimer> parse(File file) throws FileNotFoundException, IOException {
-        Stream<String> stream = FileUtils.read(file);
-        List<HotWaterTimer> items = parse(stream);
-        stream.close();
-        return items;
-    }
+  public static List<HotWaterTimer> parse(File file) throws FileNotFoundException, IOException {
+    Stream<String> stream = FileUtils.read(file);
+    List<HotWaterTimer> items = parse(stream);
+    stream.close();
+    return items;
+  }
 }
