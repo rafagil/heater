@@ -13,6 +13,7 @@ import app.osmosi.heater.model.HotWaterTimer;
 import app.osmosi.heater.utils.FileUtils;
 
 public class HotWaterTimerParser {
+  private static int idCounter = 0;
 
   private static Predicate<String> comments = l -> !l.startsWith("#");
   private static Function<String, HotWaterTimer> toTimer = l -> {
@@ -20,7 +21,8 @@ public class HotWaterTimerParser {
     Integer hours = Integer.valueOf(items[0].trim());
     Integer minutes = Integer.valueOf(items[1].trim());
     Integer timeout = Integer.valueOf(items[2].trim()) * 60 * 1000;
-    return new HotWaterTimer(hours, minutes, timeout, 0);
+    idCounter += 1;
+    return new HotWaterTimer(idCounter, hours, minutes, timeout, 0);
   };
 
   public static List<HotWaterTimer> parse(Stream<String> lines) {

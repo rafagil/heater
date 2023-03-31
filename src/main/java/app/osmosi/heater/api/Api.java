@@ -15,6 +15,7 @@ import app.osmosi.heater.store.AppStatePersister;
 import app.osmosi.heater.store.Store;
 import app.osmosi.heater.store.actions.FloorUpdateAction;
 import app.osmosi.heater.store.actions.HotWaterUpdateAction;
+import app.osmosi.heater.store.actions.SingleTimerUpdateAction;
 import app.osmosi.heater.store.actions.TimerUpdateAction;
 import app.osmosi.heater.store.reducers.AppReducer;
 import app.osmosi.heater.utils.Env;
@@ -102,6 +103,10 @@ public class Api {
   // TODO should this method exist? maybe would be better to expose the store.
   public static void setTimers(List<HotWaterTimer> timers) {
     store.dispatch(new TimerUpdateAction(timers));
+  }
+
+  public static void updateTimer(HotWaterTimer timer) {
+    store.dispatch(new SingleTimerUpdateAction(timer));
   }
 
   public static AppState getCurrentState() {

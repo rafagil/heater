@@ -15,13 +15,6 @@ import app.osmosi.heater.store.Store;
 import app.osmosi.heater.store.reducers.AppReducer;
 
 public class ApiTest {
-  private Adapter emptyAdapter = new Adapter() {
-    public void addSubscribers(Store<AppState> store) {
-    }
-
-    public void sync(AppState state) {
-    }
-  };
 
   @Test
   public void hotWaterTurnsOffAfterTimeout() {
@@ -31,7 +24,7 @@ public class ApiTest {
         new HotWater(Switch.OFF),
         List.of()), reducer);
 
-    Api.init(store, List.of(emptyAdapter));
+    Api.init(store, List.of());
     assertEquals(Switch.OFF, Api.getCurrentState().getHotWater().getState());
     Api.turnOnHotWater(500);
     assertEquals(Switch.ON, Api.getCurrentState().getHotWater().getState());
@@ -50,7 +43,7 @@ public class ApiTest {
         new HotWater(Switch.OFF),
         List.of()), reducer);
 
-    Api.init(store, List.of(emptyAdapter));
+    Api.init(store, List.of());
     assertEquals(Switch.OFF, Api.getCurrentState().getHotWater().getState());
     Api.turnOnHotWater(500);
     assertEquals(Switch.ON, Api.getCurrentState().getHotWater().getState());
@@ -82,7 +75,7 @@ public class ApiTest {
         new HotWater(Switch.OFF),
         List.of()), reducer);
 
-    Api.init(store, List.of(emptyAdapter));
+    Api.init(store, List.of());
     assertEquals(Switch.OFF, Api.getCurrentState().getFloorByName("Cima").getHeaterState());
     Api.updateFloor(Api.getCurrentState().getFloorByName("Cima").withActualTemp(10));
     assertEquals(Switch.ON, Api.getCurrentState().getFloorByName("Cima").getHeaterState());
@@ -102,7 +95,7 @@ public class ApiTest {
         new HotWater(Switch.OFF),
         List.of()), reducer);
 
-    Api.init(store, List.of(emptyAdapter));
+    Api.init(store, List.of());
     assertEquals(Switch.OFF, Api.getCurrentState().getFloorByName("Cima").getHeaterState());
     Api.updateFloor(Api.getCurrentState().getFloorByName("Cima").withActualTemp(10));
     assertEquals(Switch.ON, Api.getCurrentState().getFloorByName("Cima").getHeaterState());

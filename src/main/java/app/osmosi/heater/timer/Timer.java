@@ -42,13 +42,18 @@ public class Timer {
     Api.setTimers(fileTimers);
   }
 
+  public void updateHotWaterState(int nowMinutes, int today) {
+    AppState state = Api.getCurrentState();
+    Optional<HotWaterTimer> timer = findTimer(nowMinutes, state.getTimers());
+    if (timer.isPresent()) {
+      Api.turnOnHotWater(timer.get().getTimeout());
+      Api.updateTimer(timer.get().withDayTriggered(today));
+    }
+  }
+
   public void start() {
     intervalThread = new IntervalThread(() -> {
-      AppState state = Api.getCurrentState();
-      Optional<HotWaterTimer> timer = findTimer(getNowMinutes(), state.getTimers());
-      if (timer.isPresent()) {
-        Api.turnOnHotWater(timer.get().getTimeout());
-      }
+      updateHotWaterState(getNowMinutes(), today());
     }, 30000);
     new Thread(intervalThread).start();
   }

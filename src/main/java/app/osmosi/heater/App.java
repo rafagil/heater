@@ -10,6 +10,7 @@ import app.osmosi.heater.model.AppState;
 import app.osmosi.heater.model.Floor;
 import app.osmosi.heater.scheduler.Scheduler;
 import app.osmosi.heater.timer.Timer;
+import app.osmosi.heater.utils.Env;
 import app.osmosi.heater.utils.FileUtils;
 import app.osmosi.http.HttpServer;
 import app.osmosi.http.Request;
@@ -153,6 +154,10 @@ public class App {
     hwTimer.start();
     scheduler.start();
     Monitor.start();
+
+    if (Env.DEBUG) {
+      System.out.println("Running in DEBUG mode");
+    }
 
     int port = 8080;
     if (args.length > 0) {
