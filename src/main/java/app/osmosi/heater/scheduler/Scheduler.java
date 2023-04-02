@@ -11,7 +11,6 @@ import java.util.Optional;
 import java.util.Set;
 
 import app.osmosi.heater.api.Api;
-import app.osmosi.heater.model.AppState;
 import app.osmosi.heater.model.ScheduleItem;
 import app.osmosi.heater.utils.Env;
 import app.osmosi.heater.utils.IntervalThread;
@@ -32,7 +31,7 @@ public class Scheduler {
   private static Comparator<ScheduleItem> byTotalMinutesReversed = Comparator.comparing(ScheduleItem::getTotalMinutes)
       .reversed();
 
-  public ScheduleItem findScheduleItem(int nowMinutes, List<ScheduleItem> schedule, String floorName) {
+  public Optional<ScheduleItem> findScheduleItem(int nowMinutes, List<ScheduleItem> schedule, String floorName) {
     List<ScheduleItem> sorted = schedule.stream()
         .filter(i -> i.getFloorName().equals(floorName))
         .sorted(byTotalMinutesReversed).toList();
@@ -41,28 +40,29 @@ public class Scheduler {
         .filter(i -> nowMinutes >= i.getTotalMinutes())
         .findAny();
 
-    ScheduleItem item;
     if (optionalItem.isPresent()) {
-      item = optionalItem.get();
-    } else {
-      item = sorted.get(0);
+      return optionalItem;
+    } else if (sorted.size() > 0) {
+      return Optional.of(sorted.get(0));
     }
 
-    return item;
+    return Optional.empty();
   }
 
   public void updateDesiredTemp(List<ScheduleItem> schedule, int today, int nowMinutes) {
     Api.getCurrentState().getFloors().forEach(floor -> {
-      ScheduleItem item = findScheduleItem(nowMinutes, schedule, floor.getName());
+      Optional<ScheduleItem> item = findScheduleItem(nowMinutes, schedule, floor.getName());
 
-      // Need better names for those:
-      if (todayIs != today) {
-        todayIs = today;
-        triggeredToday = new HashSet<>();
-      }
-      if (!triggeredToday.contains(item)) {
-        Api.updateFloor(floor.withDesiredTemp(item.getDesiredTemp()));
-        triggeredToday.add(item);
+      if (item.isPresent()) {
+        // Need better names for those:
+        if (todayIs != today) {
+          todayIs = today;
+          triggeredToday = new HashSet<>();
+        }
+        if (!triggeredToday.contains(item.get())) {
+          Api.updateFloor(floor.withDesiredTemp(item.get().getDesiredTemp()));
+          triggeredToday.add(item.get());
+        }
       }
     });
   }
