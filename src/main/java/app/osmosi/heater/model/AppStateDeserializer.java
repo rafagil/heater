@@ -1,7 +1,10 @@
 package app.osmosi.heater.model;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.core.JsonParser;
@@ -37,14 +40,28 @@ public class AppStateDeserializer extends StdDeserializer<AppState> {
     return new HotWater(state);
   }
 
+  private HotWaterTimer parseTimer(JsonNode node) {
+    int hours = node.get("hours").asInt();
+    int minutes = node.get("minutes").asInt();
+    int timeout = node.get("timeout").asInt();
+    int dayTriggered = node.get("dayTriggered").asInt();
+
+    return new HotWaterTimer(hours, minutes, timeout, dayTriggered);
+
+  }
+
   @Override
   public AppState deserialize(JsonParser parser, DeserializationContext ctx) throws IOException, JacksonException {
     JsonNode node = parser.getCodec().readTree(parser);
     Floor cima = parseFloor(node.get("cima"));
     Floor baixo = parseFloor(node.get("baixo"));
     HotWater hotWater = parseHotWater(node.get("hotWater"));
+    Set<HotWaterTimer> timers = new HashSet<>();
+    node.get("timers")
+        .elements()
+        .forEachRemaining(t -> timers.add(parseTimer(t)));
 
-    return new AppState(cima, baixo, hotWater, List.of());
+    return new AppState(cima, baixo, hotWater, Collections.unmodifiableSet(timers));
   }
 
 }

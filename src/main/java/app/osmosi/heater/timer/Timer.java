@@ -5,8 +5,8 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import app.osmosi.heater.api.Api;
 import app.osmosi.heater.model.AppState;
@@ -30,7 +30,7 @@ public class Timer {
   private static Comparator<HotWaterTimer> byTotalMinutesReversed = Comparator.comparing(HotWaterTimer::getTotalMinutes)
       .reversed();
 
-  public Optional<HotWaterTimer> findTimer(int nowMinutes, List<HotWaterTimer> timers) {
+  public Optional<HotWaterTimer> findTimer(int nowMinutes, Set<HotWaterTimer> timers) {
     return timers.stream()
         .sorted(byTotalMinutesReversed)
         .filter(t -> nowMinutes >= t.getTotalMinutes() && t.getDayTriggered() != today())
@@ -38,8 +38,8 @@ public class Timer {
   }
 
   public void reloadTimers() throws IOException {
-    List<HotWaterTimer> fileTimers = HotWaterTimerParser.parse(new File(FILE_PATH));
-    Api.setTimers(fileTimers);
+    Set<HotWaterTimer> fileTimers = HotWaterTimerParser.parse(new File(FILE_PATH));
+    Api.updateTimers(fileTimers);
   }
 
   public void updateHotWaterState(int nowMinutes, int today) {

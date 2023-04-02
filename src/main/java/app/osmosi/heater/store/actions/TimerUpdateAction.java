@@ -1,17 +1,17 @@
 package app.osmosi.heater.store.actions;
 
-import java.util.List;
+import java.util.Set;
 
 import app.osmosi.heater.model.HotWaterTimer;
 
 public class TimerUpdateAction implements Action {
-    private final List<HotWaterTimer> data;
+  private final Set<HotWaterTimer> data;
 
-    public TimerUpdateAction(List<HotWaterTimer> timers) {
-        this.data = timers;
-    }
+  public TimerUpdateAction(Set<HotWaterTimer> timers) {
+    this.data = timers;
+  }
 
-    public List<HotWaterTimer> getData() {
-        return data;
-    }
+  public Set<HotWaterTimer> getData() {
+    return data;
+  }
 }

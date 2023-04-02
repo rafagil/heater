@@ -150,7 +150,9 @@ public class App {
     app.get("/balance", App::balance);
     app.get("/update-balance", App::updateBalance, "value");
 
-    hwTimer.reloadTimers();
+    if (Api.getCurrentState().getTimers().isEmpty()) { // TODO: check if file has changed?
+      hwTimer.reloadTimers();
+    }
     hwTimer.start();
     scheduler.start();
     Monitor.start();

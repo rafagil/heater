@@ -2,10 +2,13 @@ package app.osmosi.heater.scheduler;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import app.osmosi.heater.api.Api;
 import app.osmosi.heater.model.AppState;
@@ -16,6 +19,10 @@ import app.osmosi.heater.utils.IntervalThread;
 public class Scheduler {
   private static final String SCHEDULE_PATH = Env.CONFIG_PATH + "/schedule.csv";
   private IntervalThread intervalThread;
+
+  // TODO: Move both variables below to the AppState
+  private int todayIs;
+  private Set<ScheduleItem> triggeredToday;
 
   private int getNowMinutes() {
     LocalTime now = LocalTime.now();
@@ -44,14 +51,26 @@ public class Scheduler {
     return item;
   }
 
+  public void updateDesiredTemp(List<ScheduleItem> schedule, int today, int nowMinutes) {
+    Api.getCurrentState().getFloors().forEach(floor -> {
+      ScheduleItem item = findScheduleItem(nowMinutes, schedule, floor.getName());
+
+      // Need better names for those:
+      if (todayIs != today) {
+        todayIs = today;
+        triggeredToday = new HashSet<>();
+      }
+      if (!triggeredToday.contains(item)) {
+        Api.updateFloor(floor.withDesiredTemp(item.getDesiredTemp()));
+        triggeredToday.add(item);
+      }
+    });
+  }
+
   public void start() throws IOException {
     List<ScheduleItem> currentSchedule = ScheduleParser.parse(new File(SCHEDULE_PATH));
     intervalThread = new IntervalThread(() -> {
-      AppState state = Api.getCurrentState();
-      ScheduleItem cimaSchedule = findScheduleItem(getNowMinutes(), currentSchedule, state.getCima().getName());
-      ScheduleItem baixoSchedule = findScheduleItem(getNowMinutes(), currentSchedule, state.getBaixo().getName());
-      Api.updateFloor(state.getCima().withDesiredTemp(cimaSchedule.getDesiredTemp()));
-      Api.updateFloor(state.getBaixo().withDesiredTemp(baixoSchedule.getDesiredTemp()));
+      updateDesiredTemp(currentSchedule, LocalDateTime.now().getDayOfMonth(), getNowMinutes());
     }, 30000);
     new Thread(intervalThread).start();
   }
@@ -62,13 +81,3 @@ public class Scheduler {
     }
   }
 }
-
-// (defn start-scheduler []
-// (reset! running true)
-// (go-loop []
-// (check-and-trigger heater-schedule on-trigger)
-// (check-and-trigger water-timers #(api/turn-on-hot-water (:timeout %)))
-// (<! (timeout 30000))
-// (when @running (recur))))
-
-// (defn stop-scheduler [] (reset! running false))

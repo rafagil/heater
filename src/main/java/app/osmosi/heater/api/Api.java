@@ -2,7 +2,10 @@ package app.osmosi.heater.api;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import app.osmosi.heater.adapters.Adapter;
 import app.osmosi.heater.adapters.http.HttpAdapter;
@@ -44,7 +47,7 @@ public class Api {
       store = new Store<AppState>(new AppState(new Floor("Cima", 0, 0, 99, Switch.OFF, "Suite", 2, 0),
           new Floor("Baixo", 0, 0, 99, Switch.OFF, "Sala", 3, 0),
           new HotWater(Switch.OFF),
-          List.of()), reducer);
+          Set.of()), reducer);
     }
     // Adapters:
     try {
@@ -100,9 +103,15 @@ public class Api {
     turnOffHotWater();
   }
 
-  // TODO should this method exist? maybe would be better to expose the store.
-  public static void setTimers(List<HotWaterTimer> timers) {
-    store.dispatch(new TimerUpdateAction(timers));
+  public static void updateTimers(Set<HotWaterTimer> timers) {
+    Set<HotWaterTimer> currentTimers = Api.getCurrentState().getTimers();
+    Set<HotWaterTimer> existingTimers = currentTimers
+        .stream()
+        .filter(t -> timers.contains(t)) // Deletes Timers that are no longer in the "file"
+        .collect(Collectors.toSet());
+    Set<HotWaterTimer> mergedTimers = new HashSet<>(existingTimers);
+    mergedTimers.addAll(timers);
+    store.dispatch(new TimerUpdateAction(mergedTimers));
   }
 
   public static void updateTimer(HotWaterTimer timer) {

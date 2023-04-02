@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -22,8 +23,8 @@ public class TimerTest {
   @Test
   public void getsTheCorrectTimer() {
     Timer timer = new Timer();
-    List<HotWaterTimer> timers = List.of(new HotWaterTimer(1, 7, 0, 10, 0),
-        new HotWaterTimer(2, 11, 15, 10, 0));
+    Set<HotWaterTimer> timers = Set.of(new HotWaterTimer(7, 0, 10, 0),
+        new HotWaterTimer(11, 15, 10, 0));
 
     assertTrue(timer.findTimer(7 * 60, timers).isPresent());
     assertTrue(timer.findTimer(11 * 60, timers).isPresent());
@@ -34,8 +35,8 @@ public class TimerTest {
   public void ignoresAlreadyTriggered() {
     int today = LocalDateTime.now().getDayOfMonth();
     Timer timer = new Timer();
-    List<HotWaterTimer> timers = List.of(new HotWaterTimer(1, 7, 0, 10, today),
-        new HotWaterTimer(2, 11, 15, 10, today));
+    Set<HotWaterTimer> timers = Set.of(new HotWaterTimer(7, 0, 10, today),
+        new HotWaterTimer(11, 15, 10, today));
 
     assertFalse(timer.findTimer(7 * 60, timers).isPresent());
     assertFalse(timer.findTimer(11 * 60, timers).isPresent());
@@ -45,8 +46,7 @@ public class TimerTest {
   public void updatesDayTriggered() {
     int today = LocalDateTime.now().getDayOfMonth();
     Timer timer = new Timer();
-    List<HotWaterTimer> timers = List.of(new HotWaterTimer(1, 7, 0, 10, 0),
-        new HotWaterTimer(2, 11, 15, 10, 0));
+    Set<HotWaterTimer> timers = Set.of(new HotWaterTimer(7, 0, 10, 0));
     AppReducer reducer = new AppReducer();
     Store<AppState> store = new Store<AppState>(new AppState(new Floor("Cima", 0, 0, 99, Switch.OFF, "Suite", 2, 0),
         new Floor("Baixo", 0, 0, 99, Switch.OFF, "Sala", 3, 0),
@@ -54,9 +54,9 @@ public class TimerTest {
         timers), reducer);
 
     Api.init(store, List.of());
-    assertEquals(0, Api.getCurrentState().getTimers().get(0).getDayTriggered());
+    assertEquals(0, Api.getCurrentState().getTimers().stream().findFirst().get().getDayTriggered());
 
     timer.updateHotWaterState(7 * 60, today);
-    assertEquals(today, Api.getCurrentState().getTimers().get(0).getDayTriggered());
+    assertEquals(today, Api.getCurrentState().getTimers().stream().findFirst().get().getDayTriggered());
   }
 }
