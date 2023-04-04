@@ -1,7 +1,6 @@
 package app.osmosi.heater.api;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 import java.util.Set;
@@ -11,7 +10,6 @@ import org.junit.Test;
 import app.osmosi.heater.model.AppState;
 import app.osmosi.heater.model.Floor;
 import app.osmosi.heater.model.HotWater;
-import app.osmosi.heater.model.HotWaterTimer;
 import app.osmosi.heater.model.Switch;
 import app.osmosi.heater.store.Store;
 import app.osmosi.heater.store.reducers.AppReducer;
@@ -105,33 +103,4 @@ public class ApiTest {
     assertEquals(Switch.OFF, Api.getCurrentState().getFloorByName("Cima").getHeaterState());
   }
 
-  @Test
-  public void hotWaterTimersShouldBeMergedOnUpdate() {
-    AppReducer reducer = new AppReducer();
-    Store<AppState> store = new Store<AppState>(new AppState(new Floor("Cima", 20, 19, 99, Switch.OFF, "Suite", 2, 0),
-        new Floor("Baixo", 0, 0, 99, Switch.OFF, "Sala", 3, 0),
-        new HotWater(Switch.OFF),
-        Set.of()), reducer);
-    Api.init(store, List.of());
-
-    Set<HotWaterTimer> existingTimers = Set.of(new HotWaterTimer(1, 0, 10, 10));
-
-    assertTrue(Api.getCurrentState().getTimers().isEmpty());
-    Api.updateTimers(existingTimers);
-    assertEquals(1, Api.getCurrentState().getTimers().size());
-    assertEquals(10, Api.getCurrentState().getTimers().stream().findFirst().get().getDayTriggered());
-
-    Set<HotWaterTimer> differentDayTimers = Set.of(new HotWaterTimer(1, 0, 10, 0));
-    Api.updateTimers(differentDayTimers);
-
-    assertEquals(1, Api.getCurrentState().getTimers().size());
-    assertEquals(10, Api.getCurrentState().getTimers().stream().findFirst().get().getDayTriggered());
-
-    Set<HotWaterTimer> withNewTimer = Set.of(new HotWaterTimer(1, 0, 10, 0), new HotWaterTimer(2, 10, 5, 10));
-    Api.updateTimers(withNewTimer);
-
-    assertEquals(2, Api.getCurrentState().getTimers().size());
-    Api.getCurrentState().getTimers().stream().forEach(t -> assertEquals(10, t.getDayTriggered()));
-
-  }
 }

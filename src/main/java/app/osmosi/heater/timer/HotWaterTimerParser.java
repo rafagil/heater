@@ -20,7 +20,7 @@ public class HotWaterTimerParser {
     Integer hours = Integer.valueOf(items[0].trim());
     Integer minutes = Integer.valueOf(items[1].trim());
     Integer timeout = Integer.valueOf(items[2].trim()) * 60 * 1000;
-    return new HotWaterTimer(hours, minutes, timeout, 0);
+    return new HotWaterTimer(hours, minutes, timeout);
   };
 
   public static Set<HotWaterTimer> parse(Stream<String> lines) {

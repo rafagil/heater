@@ -2,14 +2,13 @@ package app.osmosi.heater.timer;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Comparator;
-import java.util.Optional;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import app.osmosi.heater.api.Api;
-import app.osmosi.heater.model.AppState;
 import app.osmosi.heater.model.HotWaterTimer;
 import app.osmosi.heater.utils.Env;
 import app.osmosi.heater.utils.IntervalThread;
@@ -23,38 +22,24 @@ public class Timer {
     return (now.getHour() * 60) + now.getMinute();
   }
 
-  private int today() {
-    return LocalDateTime.now().getDayOfMonth();
-  }
-
-  private static Comparator<HotWaterTimer> byTotalMinutesReversed = Comparator.comparing(HotWaterTimer::getTotalMinutes)
-      .reversed();
-
-  public Optional<HotWaterTimer> findTimer(int nowMinutes, Set<HotWaterTimer> timers) {
-    return timers.stream()
-        .sorted(byTotalMinutesReversed)
-        .filter(t -> nowMinutes >= t.getTotalMinutes() && t.getDayTriggered() != today())
-        .findAny();
-  }
-
   public void reloadTimers() throws IOException {
     Set<HotWaterTimer> fileTimers = HotWaterTimerParser.parse(new File(FILE_PATH));
     Api.updateTimers(fileTimers);
   }
 
-  public void updateHotWaterState(int nowMinutes, int today) {
-    AppState state = Api.getCurrentState();
-    Optional<HotWaterTimer> timer = findTimer(nowMinutes, state.getTimers());
-    if (timer.isPresent()) {
-      Api.turnOnHotWater(timer.get().getTimeout());
-      Api.updateTimer(timer.get().withDayTriggered(today));
-    }
-  }
-
   public void start() {
+    Set<HotWaterTimer> timers = Api.getCurrentState().getTimers();
+
+    Map<Integer, HotWaterTimer> timerMap = timers.stream()
+        .collect(Collectors.toMap(HotWaterTimer::getTotalMinutes, Function.identity()));
+
     intervalThread = new IntervalThread(() -> {
-      updateHotWaterState(getNowMinutes(), today());
-    }, 30000);
+      HotWaterTimer timer = timerMap.get(getNowMinutes());
+      if (timer != null) {
+        Api.turnOnHotWater(timer.getTimeout());
+      }
+    }, 60000);
+
     new Thread(intervalThread).start();
   }
 

@@ -6,17 +6,11 @@ public class HotWaterTimer {
   private final int hours;
   private final int minutes;
   private final int timeout;
-  private final int dayTriggered;
 
-  public HotWaterTimer(int hours, int minutes, int timeout, int dayTriggered) {
+  public HotWaterTimer(int hours, int minutes, int timeout) {
     this.hours = hours;
     this.minutes = minutes;
     this.timeout = timeout;
-    this.dayTriggered = dayTriggered;
-  }
-
-  public HotWaterTimer withDayTriggered(int dayTriggered) {
-    return new HotWaterTimer(this.hours, this.minutes, this.timeout, dayTriggered);
   }
 
   public int getHours() {
@@ -29,10 +23,6 @@ public class HotWaterTimer {
 
   public int getTimeout() {
     return timeout;
-  }
-
-  public int getDayTriggered() {
-    return dayTriggered;
   }
 
   public int getTotalMinutes() {

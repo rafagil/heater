@@ -44,9 +44,8 @@ public class AppStateDeserializer extends StdDeserializer<AppState> {
     int hours = node.get("hours").asInt();
     int minutes = node.get("minutes").asInt();
     int timeout = node.get("timeout").asInt();
-    int dayTriggered = node.get("dayTriggered").asInt();
 
-    return new HotWaterTimer(hours, minutes, timeout, dayTriggered);
+    return new HotWaterTimer(hours, minutes, timeout);
 
   }
 

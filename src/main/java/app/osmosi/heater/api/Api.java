@@ -22,6 +22,7 @@ import app.osmosi.heater.store.actions.SingleTimerUpdateAction;
 import app.osmosi.heater.store.actions.TimerUpdateAction;
 import app.osmosi.heater.store.reducers.AppReducer;
 import app.osmosi.heater.utils.Env;
+import app.osmosi.heater.utils.MobileNotification;
 
 public class Api {
   private static Store<AppState> store;
@@ -75,7 +76,8 @@ public class Api {
   public static void turnOnHotWater(final int timeoutMs) {
     store.dispatch(new HotWaterUpdateAction(new HotWater(Switch.ON)));
     final long instanceId = store.getState().getHotWater().getInstanceId();
-    System.out.println("Hot water is ON for " + (timeoutMs / 60 / 1000) + " minutes");
+    MobileNotification.sendNotification("Hot Water is ON");
+
     new Thread(() -> {
       try {
         Thread.sleep(timeoutMs);
@@ -89,7 +91,7 @@ public class Api {
 
   public static void turnOffHotWater() {
     store.dispatch(new HotWaterUpdateAction(new HotWater(Switch.OFF)));
-    System.out.println("Hot water is OFF");
+    MobileNotification.sendNotification("Hot Water is OFF");
   }
 
   public static void updateFloor(final Floor newFloor) {
