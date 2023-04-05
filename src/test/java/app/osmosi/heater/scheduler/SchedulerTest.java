@@ -41,31 +41,4 @@ public class SchedulerTest {
     assertEquals(20.3, s.findScheduleItem(3 * 60, schedule, "Cima").get().getDesiredTemp(), 0); // 3:00
     assertEquals(18, s.findScheduleItem(3 * 60, schedule, "Baixo").get().getDesiredTemp(), 0); // 3:00
   }
-
-  @Test
-  public void doesNotOverrideCustomDesiredTemp() {
-    List<ScheduleItem> schedule = List.of(new ScheduleItem("Cima", 7, 0, 17));
-
-    AppReducer reducer = new AppReducer();
-    Store<AppState> store = new Store<AppState>(new AppState(new Floor("Cima", 0, 0, 99, Switch.OFF, "Suite", 2, 0),
-        new Floor("Baixo", 0, 0, 99, Switch.OFF, "Sala", 3, 0),
-        new HotWater(Switch.OFF),
-        Set.of()), reducer);
-
-    Api.init(store, List.of());
-
-    Scheduler s = new Scheduler();
-    s.syncInitialDesiredTemp(schedule, 1, 7 * 60);
-    // Calling it once should change the getDesiredTemp:
-    assertEquals(17, Api.getCurrentState().getFloorByName("Cima").getDesiredTemp(), 0);
-    Api.updateFloor(Api.getCurrentState().getFloorByName("Cima").withDesiredTemp(20));
-    assertEquals(20, Api.getCurrentState().getFloorByName("Cima").getDesiredTemp(), 0);
-    // Calling it twice should not update the temperature:
-    s.syncInitialDesiredTemp(schedule, 1, 7 * 60);
-    assertEquals(20, Api.getCurrentState().getFloorByName("Cima").getDesiredTemp(), 0);
-
-    // Calling on another day should override the temperature:
-    s.syncInitialDesiredTemp(schedule, 2, 7 * 60);
-    assertEquals(17, Api.getCurrentState().getFloorByName("Cima").getDesiredTemp(), 0);
-  }
 }

@@ -18,6 +18,8 @@ public class MobileNotification {
         URL url = new URL(urlString + URLEncoder.encode(text, StandardCharsets.UTF_8));
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
 
+        Logger.debug("Notification Response Code: " + con.getResponseCode());
+
         con.disconnect();
       } catch (IOException e) {
         e.printStackTrace();

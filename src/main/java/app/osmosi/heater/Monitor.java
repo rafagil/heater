@@ -16,6 +16,7 @@ import app.osmosi.heater.model.Switch;
 import app.osmosi.heater.utils.Env;
 import app.osmosi.heater.utils.FileUtils;
 import app.osmosi.heater.utils.IntervalThread;
+import app.osmosi.heater.utils.Logger;
 
 public class Monitor {
   private static List<IntervalThread> threads;
@@ -130,7 +131,7 @@ public class Monitor {
   }
 
   public static void start() {
-    System.out.println("Monitoring is ON");
+    Logger.info("Monitoring is ON");
     threads = List.of(monitorThermometers(),
         monitorOnStatus(),
         monitorCredits());

@@ -5,11 +5,9 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import app.osmosi.heater.api.Api;
@@ -21,10 +19,6 @@ import app.osmosi.heater.utils.IntervalThread;
 public class Scheduler {
   private static final String SCHEDULE_PATH = Env.CONFIG_PATH + "/schedule.csv";
   private IntervalThread intervalThread;
-
-  // TODO: Move both variables below to the AppState
-  private int todayIs;
-  private Set<ScheduleItem> triggeredToday;
 
   private int getNowMinutes() {
     LocalTime now = LocalTime.now();
@@ -57,15 +51,7 @@ public class Scheduler {
       Optional<ScheduleItem> item = findScheduleItem(nowMinutes, schedule, floor.getName());
 
       if (item.isPresent()) {
-        // Need better names for those:
-        if (todayIs != today) {
-          todayIs = today;
-          triggeredToday = new HashSet<>();
-        }
-        if (!triggeredToday.contains(item.get())) {
-          Api.updateFloor(floor.withDesiredTemp(item.get().getDesiredTemp()));
-          triggeredToday.add(item.get());
-        }
+        Api.updateFloor(floor.withDesiredTemp(item.get().getDesiredTemp()));
       }
     });
   }
