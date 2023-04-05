@@ -11,7 +11,7 @@ public class MobileNotification {
 
   public static void sendNotification(String text) {
     if (Env.DEBUG) {
-      System.out.println("Sending a notification with: " + text);
+      Logger.debug("Sending a notification with: " + text);
     } else {
 
       try {

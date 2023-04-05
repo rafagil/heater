@@ -7,10 +7,13 @@ import java.time.LocalTime;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import app.osmosi.heater.api.Api;
+import app.osmosi.heater.model.Floor;
 import app.osmosi.heater.model.ScheduleItem;
 import app.osmosi.heater.utils.Env;
 import app.osmosi.heater.utils.IntervalThread;
@@ -49,7 +52,7 @@ public class Scheduler {
     return Optional.empty();
   }
 
-  public void updateDesiredTemp(List<ScheduleItem> schedule, int today, int nowMinutes) {
+  public void syncInitialDesiredTemp(List<ScheduleItem> schedule, int today, int nowMinutes) {
     Api.getCurrentState().getFloors().forEach(floor -> {
       Optional<ScheduleItem> item = findScheduleItem(nowMinutes, schedule, floor.getName());
 
@@ -67,11 +70,25 @@ public class Scheduler {
     });
   }
 
+  public void updateDesiredTemp(ScheduleItem item) {
+    Floor floor = Api.getCurrentState().getFloorByName(item.getFloorName());
+    Api.updateFloor(floor.withDesiredTemp(item.getDesiredTemp()));
+  }
+
   public void start() throws IOException {
     List<ScheduleItem> currentSchedule = ScheduleParser.parse(new File(SCHEDULE_PATH));
+    // Starts with the correct schedule on the first time:
+    syncInitialDesiredTemp(currentSchedule, LocalDateTime.now().getDayOfMonth(), getNowMinutes());
+
+    Map<Integer, List<ScheduleItem>> scheduleMap = currentSchedule.stream()
+        .collect(Collectors.groupingBy(ScheduleItem::getTotalMinutes));
+
     intervalThread = new IntervalThread(() -> {
-      updateDesiredTemp(currentSchedule, LocalDateTime.now().getDayOfMonth(), getNowMinutes());
-    }, 30000);
+      List<ScheduleItem> items = scheduleMap.get(getNowMinutes());
+      if (items != null) {
+        items.forEach(this::updateDesiredTemp);
+      }
+    }, 60000);
     new Thread(intervalThread).start();
   }
 

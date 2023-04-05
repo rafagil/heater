@@ -55,17 +55,17 @@ public class SchedulerTest {
     Api.init(store, List.of());
 
     Scheduler s = new Scheduler();
-    s.updateDesiredTemp(schedule, 1, 7 * 60);
+    s.syncInitialDesiredTemp(schedule, 1, 7 * 60);
     // Calling it once should change the getDesiredTemp:
     assertEquals(17, Api.getCurrentState().getFloorByName("Cima").getDesiredTemp(), 0);
     Api.updateFloor(Api.getCurrentState().getFloorByName("Cima").withDesiredTemp(20));
     assertEquals(20, Api.getCurrentState().getFloorByName("Cima").getDesiredTemp(), 0);
     // Calling it twice should not update the temperature:
-    s.updateDesiredTemp(schedule, 1, 7 * 60);
+    s.syncInitialDesiredTemp(schedule, 1, 7 * 60);
     assertEquals(20, Api.getCurrentState().getFloorByName("Cima").getDesiredTemp(), 0);
 
     // Calling on another day should override the temperature:
-    s.updateDesiredTemp(schedule, 2, 7 * 60);
+    s.syncInitialDesiredTemp(schedule, 2, 7 * 60);
     assertEquals(17, Api.getCurrentState().getFloorByName("Cima").getDesiredTemp(), 0);
   }
 }

@@ -22,7 +22,7 @@ import app.osmosi.heater.store.actions.SingleTimerUpdateAction;
 import app.osmosi.heater.store.actions.TimerUpdateAction;
 import app.osmosi.heater.store.reducers.AppReducer;
 import app.osmosi.heater.utils.Env;
-import app.osmosi.heater.utils.MobileNotification;
+import app.osmosi.heater.utils.Logger;
 
 public class Api {
   private static Store<AppState> store;
@@ -76,7 +76,7 @@ public class Api {
   public static void turnOnHotWater(final int timeoutMs) {
     store.dispatch(new HotWaterUpdateAction(new HotWater(Switch.ON)));
     final long instanceId = store.getState().getHotWater().getInstanceId();
-    MobileNotification.sendNotification("Hot Water is ON");
+    Logger.info("Hot Water is ON");
 
     new Thread(() -> {
       try {
@@ -91,7 +91,7 @@ public class Api {
 
   public static void turnOffHotWater() {
     store.dispatch(new HotWaterUpdateAction(new HotWater(Switch.OFF)));
-    MobileNotification.sendNotification("Hot Water is OFF");
+    Logger.info("Hot Water is OFF");
   }
 
   public static void updateFloor(final Floor newFloor) {
@@ -100,7 +100,7 @@ public class Api {
   }
 
   public static void syncAdapters() {
-    System.out.println("Synchronizing all adapters");
+    Logger.info("Synchronizing all adapters");
     adapters.forEach(a -> a.sync(getCurrentState()));
     turnOffHotWater();
   }
