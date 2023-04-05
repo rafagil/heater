@@ -21,12 +21,12 @@ import app.osmosi.heater.utils.Logger;
 public class Monitor {
   private static List<IntervalThread> threads;
   public static final String BALANCE_FILE_PATH = Env.DB_PATH + "/balance.txt";
-  private static final double LOW_CREDIT_THRESHOLD = 12;
+  private static final int LOW_CREDIT_THRESHOLD = 12;
   // TODO: Think of a better way to implment these vars:
   static int minuteCounter = 0;
   static boolean sentHeaterOn = false;
   static boolean sentCredits = false;
-  static double lastBalance = 0;
+  static float lastBalance = 0;
 
   private static int minutesToMs(int minutes) {
     return minutes * 60 * 1000;
@@ -34,7 +34,7 @@ public class Monitor {
 
   private static void notifyAndShutDown(Floor f) {
     String msg = "Temperature not changing on " + f.getName();
-    System.out.println(msg);
+    Logger.info(msg);
     sendNotification(msg);
     Api.updateFloor(f.withActualTemp(999));
   }
@@ -50,13 +50,13 @@ public class Monitor {
   }
 
   private static IntervalThread monitorCredits() {
-    final int hourlyRate = 1; // 1 EUR per how (approx)
-    final double minuteRate = hourlyRate / 60;
+    final float hourlyRate = 1; // 1 EUR per how (approx)
+    final float minuteRate = hourlyRate / 60;
     final int timeout = minutesToMs(1);
     IntervalThread it = new IntervalThread(() -> {
       try (Stream<String> lines = FileUtils.read(BALANCE_FILE_PATH)) {
         Optional<String> line = lines.findFirst();
-        double balance = Double.valueOf(line.orElse("0"));
+        float balance = Float.valueOf(line.orElse("0"));
 
         if (isHeaterOn()) {
           FileUtils.write(BALANCE_FILE_PATH, String.valueOf(balance - minuteRate));
@@ -74,7 +74,7 @@ public class Monitor {
       } catch (IOException e) {
         String msg = "Could not update current balance.";
         sendNotification(msg);
-        System.out.println(msg);
+        Logger.error(msg);
       }
     }, timeout);
     return it;
