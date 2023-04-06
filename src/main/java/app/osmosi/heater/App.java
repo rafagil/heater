@@ -12,6 +12,8 @@ import app.osmosi.heater.scheduler.Scheduler;
 import app.osmosi.heater.timer.Timer;
 import app.osmosi.heater.utils.Env;
 import app.osmosi.heater.utils.FileUtils;
+import app.osmosi.heater.utils.LogLevel;
+import app.osmosi.heater.utils.Logger;
 import app.osmosi.http.HttpServer;
 import app.osmosi.http.Request;
 import app.osmosi.http.Response;
@@ -77,8 +79,8 @@ public class App {
 
   private static Response setBack(double temp) {
     AppState state = Api.getCurrentState();
-    Api.updateFloor(state.getCima().withSetBackTemp(temp));
-    Api.updateFloor(state.getBaixo().withSetBackTemp(temp));
+    state.getFloors().stream()
+        .forEach(f -> Api.updateFloor(f.withSetBackTemp(temp)));
     return new Response(Api.getCurrentState());
   }
 
@@ -116,6 +118,7 @@ public class App {
   }
 
   public static void main(String[] args) throws IOException {
+    Logger.setLogLevel(LogLevel.INFO);
     Api.init();
     Api.syncAdapters();
 
@@ -158,7 +161,7 @@ public class App {
     Monitor.start();
 
     if (Env.DEBUG) {
-      System.out.println("Running in DEBUG mode");
+      Logger.info("Running in DEBUG mode");
     }
 
     int port = 8080;

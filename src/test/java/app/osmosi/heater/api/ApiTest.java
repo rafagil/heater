@@ -16,14 +16,18 @@ import app.osmosi.heater.store.reducers.AppReducer;
 
 public class ApiTest {
 
+  private Store<AppState> getInitialStore() {
+    AppReducer reducer = new AppReducer();
+    return new Store<AppState>(new AppState(
+        new HotWater(Switch.OFF),
+        Set.of(),
+        new Floor("Cima", 0, 0, 99, Switch.OFF, 0),
+        new Floor("Baixo", 0, 0, 99, Switch.OFF, 0)), reducer);
+  }
+
   @Test
   public void hotWaterTurnsOffAfterTimeout() {
-    AppReducer reducer = new AppReducer();
-    Store<AppState> store = new Store<AppState>(new AppState(new Floor("Cima", 0, 0, 99, Switch.OFF, "Suite", 2, 0),
-        new Floor("Baixo", 0, 0, 99, Switch.OFF, "Sala", 3, 0),
-        new HotWater(Switch.OFF),
-        Set.of()), reducer);
-
+    Store<AppState> store = getInitialStore();
     Api.init(store, List.of());
     assertEquals(Switch.OFF, Api.getCurrentState().getHotWater().getState());
     Api.turnOnHotWater(500);
@@ -37,12 +41,7 @@ public class ApiTest {
 
   @Test
   public void secondTimerOverridesFirst() {
-    AppReducer reducer = new AppReducer();
-    Store<AppState> store = new Store<AppState>(new AppState(new Floor("Cima", 0, 0, 99, Switch.OFF, "Suite", 2, 0),
-        new Floor("Baixo", 0, 0, 99, Switch.OFF, "Sala", 3, 0),
-        new HotWater(Switch.OFF),
-        Set.of()), reducer);
-
+    Store<AppState> store = getInitialStore();
     Api.init(store, List.of());
     assertEquals(Switch.OFF, Api.getCurrentState().getHotWater().getState());
     Api.turnOnHotWater(500);
@@ -70,10 +69,11 @@ public class ApiTest {
   @Test
   public void switchesHeaterStates() {
     AppReducer reducer = new AppReducer();
-    Store<AppState> store = new Store<AppState>(new AppState(new Floor("Cima", 20, 0, 99, Switch.OFF, "Suite", 2, 0),
-        new Floor("Baixo", 0, 0, 99, Switch.OFF, "Sala", 3, 0),
+    Store<AppState> store = new Store<AppState>(new AppState(
         new HotWater(Switch.OFF),
-        Set.of()), reducer);
+        Set.of(),
+        new Floor("Cima", 20, 0, 99, Switch.OFF, 0),
+        new Floor("Baixo", 0, 0, 99, Switch.OFF, 0)), reducer);
 
     Api.init(store, List.of());
     assertEquals(Switch.OFF, Api.getCurrentState().getFloorByName("Cima").getHeaterState());
@@ -90,10 +90,11 @@ public class ApiTest {
   @Test
   public void setBackTempShouldOverrideDesiredTemp() {
     AppReducer reducer = new AppReducer();
-    Store<AppState> store = new Store<AppState>(new AppState(new Floor("Cima", 20, 19, 99, Switch.OFF, "Suite", 2, 0),
-        new Floor("Baixo", 0, 0, 99, Switch.OFF, "Sala", 3, 0),
+    Store<AppState> store = new Store<AppState>(new AppState(
         new HotWater(Switch.OFF),
-        Set.of()), reducer);
+        Set.of(),
+        new Floor("Cima", 20, 19, 99, Switch.OFF, 0),
+        new Floor("Baixo", 0, 0, 99, Switch.OFF, 0)), reducer);
 
     Api.init(store, List.of());
     assertEquals(Switch.OFF, Api.getCurrentState().getFloorByName("Cima").getHeaterState());

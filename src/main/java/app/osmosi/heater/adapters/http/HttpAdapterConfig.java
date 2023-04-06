@@ -1,79 +1,112 @@
 package app.osmosi.heater.adapters.http;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
+
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 
-import com.fasterxml.jackson.core.JacksonException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-
-@JsonDeserialize(using = ConfigDeserializer.class)
 public class HttpAdapterConfig {
   private final List<CentralHeatingConfig> centralHeating;
-  private final RequestConfig hotWater;
+  private final Optional<RequestConfig> hotWater;
 
-  public HttpAdapterConfig(List<CentralHeatingConfig> centralHeating, RequestConfig hotWater) {
-    this.centralHeating = centralHeating;
-    this.hotWater = hotWater;
+  private Stream<Node> getChildren(NodeList list) {
+    return IntStream.range(0, list.getLength()).mapToObj(list::item);
+  }
+
+  private Predicate<Node> byNodeName(String name) {
+    return n -> n.getNodeName().equals(name);
+  }
+
+  private Optional<Node> firstChild(NodeList list, String name) {
+    return getChildren(list).filter(byNodeName(name)).findFirst();
+  }
+
+  private Optional<String> getPayload(Node request, String tagName) {
+    Optional<Node> onPayload = firstChild(request.getChildNodes(), tagName);
+    if (onPayload.isPresent()) {
+      Node payload = onPayload.get();
+      return Optional.of(payload.getTextContent());
+    }
+    return Optional.empty();
+  }
+
+  private RequestConfig parseRequest(Element req) {
+    String onURL = req.getAttribute("on");
+    String offURL = req.getAttribute("off");
+    String method = req.getAttribute("method");
+    Optional<String> onPayload = getPayload(req, "on-payload");
+    Optional<String> offPayload = getPayload(req, "off-payload");
+    return new RequestConfig(onURL, offURL, method, onPayload, offPayload);
+  }
+
+  private CentralHeatingConfig parseCHConfig(Node ch) {
+    Element floor = (Element) ch;
+    String floorName = floor.getAttribute("name");
+    var requestNode = firstChild(ch.getChildNodes(), "request");
+    RequestConfig request = null;
+    if (requestNode.isPresent()) {
+      Element requestElement = (Element) requestNode.get();
+      request = parseRequest(requestElement);
+    }
+    return new CentralHeatingConfig(floorName, request);
+  }
+
+  public HttpAdapterConfig(File file) throws IOException, SAXException, ParserConfigurationException {
+    // FileInputStream fis = new FileInputStream(new
+    // File("/projects/heater/config/http-adapter.xml"));
+    FileInputStream fis = new FileInputStream(file);
+    DocumentBuilderFactory bFactory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder builder = bFactory.newDocumentBuilder();
+    Document document = builder.parse(fis);
+    Node root = document.getFirstChild();
+    Optional<Node> centralHeating = firstChild(root.getChildNodes(), "centralheating");
+    Optional<Node> hotWater = firstChild(root.getChildNodes(), "hotwater");
+
+    if (centralHeating.isPresent()) {
+      Element ch = (Element) centralHeating.get();
+      NodeList children = ch.getElementsByTagName("floor");
+      List<CentralHeatingConfig> chConfigs = getChildren(children)
+          .map(this::parseCHConfig)
+          .collect(Collectors.toList());
+      this.centralHeating = chConfigs;
+    } else {
+      this.centralHeating = List.of();
+    }
+
+    if (hotWater.isPresent()) {
+      Optional<Node> request = firstChild(hotWater.get().getChildNodes(), "request");
+      if (request.isPresent()) {
+        var req = parseRequest((Element) request.get());
+        this.hotWater = Optional.of(req);
+      } else {
+        this.hotWater = Optional.empty();
+      }
+    } else {
+      this.hotWater = Optional.empty();
+    }
   }
 
   public List<CentralHeatingConfig> getCentralHeating() {
     return centralHeating;
   }
 
-  public RequestConfig getHotWater() {
+  public Optional<RequestConfig> getHotWater() {
     return hotWater;
   }
-}
-
-class ConfigDeserializer extends StdDeserializer<HttpAdapterConfig> {
-
-  public ConfigDeserializer() {
-    this(null);
-  }
-
-  public ConfigDeserializer(Class<?> vc) {
-    super(vc);
-  }
-
-  private CentralHeatingConfig parseCentralHeating(JsonNode node) {
-    String floorName = node.get("floorName").asText();
-    return new CentralHeatingConfig(floorName, parseRequestConfig(node.get("request")));
-  }
-
-  private RequestConfig parseRequestConfig(JsonNode node) {
-    String onURL = node.get("onURL").asText();
-    String offURL = node.get("offURL").asText();
-    String method = node.get("method").asText();
-    String onPayload = "";
-    String offPayload = "";
-    JsonNode onPayloadNode = node.get("onPayload");
-    JsonNode offPayloadNode = node.get("offPayload");
-    if (onPayloadNode != null) {
-      onPayload = onPayloadNode.asText();
-    }
-    if (offPayloadNode != null) {
-      offPayload = offPayloadNode.asText();
-    }
-    return new RequestConfig(onURL, offURL, method, onPayload, offPayload);
-  }
-
-  @Override
-  public HttpAdapterConfig deserialize(JsonParser parser, DeserializationContext ctx)
-      throws IOException, JacksonException {
-    JsonNode node = parser.getCodec().readTree(parser);
-    List<CentralHeatingConfig> centralHeating = new ArrayList<>();
-    node.get("centralHeating")
-        .elements()
-        .forEachRemaining(n -> centralHeating.add(parseCentralHeating(n)));
-    RequestConfig hotWater = parseRequestConfig(node.get("hotWater"));
-
-    return new HttpAdapterConfig(Collections.unmodifiableList(centralHeating), hotWater);
-  }
-
 }

@@ -5,16 +5,15 @@ import app.osmosi.heater.store.actions.Action;
 
 public class AppReducer implements Reducer<AppState> {
 
-    private final FloorReducer cimaReducer = new FloorReducer("Cima");
-    private final FloorReducer baixoReducer = new FloorReducer("Baixo");
-    private final HotWaterReducer hwReducer = new HotWaterReducer();
-    private final TimersReducer timersReducer = new TimersReducer();
+  private final FloorsReducer floorsReducer = new FloorsReducer();
+  private final HotWaterReducer hwReducer = new HotWaterReducer();
+  private final TimersReducer timersReducer = new TimersReducer();
 
-    @Override
-    public AppState reduce(Action action, AppState state) {
-        return new AppState(cimaReducer.reduce(action, state.getCima()),
-                            baixoReducer.reduce(action, state.getBaixo()),
-                            hwReducer.reduce(action, state.getHotWater()),
-                            timersReducer.reduce(action, state.getTimers()));
-    }
+  @Override
+  public AppState reduce(Action action, AppState state) {
+    return new AppState(
+        hwReducer.reduce(action, state.getHotWater()),
+        timersReducer.reduce(action, state.getTimers()),
+        floorsReducer.reduce(action, state.getFloors()));
+  }
 }

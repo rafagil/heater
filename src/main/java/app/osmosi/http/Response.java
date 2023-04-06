@@ -1,56 +1,45 @@
 package app.osmosi.http;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import app.osmosi.heater.model.JsonObject;
 
 public class Response {
-    private final ResponseCodes code;
-    private final String body;
-    private final String contentType;
+  private final ResponseCodes code;
+  private final String body;
+  private final String contentType;
 
-    public Response(ResponseCodes code, String body, String contentType) {
-        this.code = code;
-        this.body = body;
-        this.contentType = contentType;
-    }
+  public Response(ResponseCodes code, String body, String contentType) {
+    this.code = code;
+    this.body = body;
+    this.contentType = contentType;
+  }
 
-    public Response(ResponseCodes code, String body) {
-        this(code, body, "text/html");
-    }
+  public Response(ResponseCodes code, String body) {
+    this(code, body, "text/html");
+  }
 
-    public Response(String body) {
-        this(ResponseCodes.OK, body);
-    }
+  public Response(String body) {
+    this(ResponseCodes.OK, body);
+  }
 
-    public Response(ResponseCodes code, Object bean) {
-        this.code = code;
-        this.body = parseBean(bean);
-        this.contentType = "application/json";
-    }
+  public Response(ResponseCodes code, JsonObject obj) {
+    this.code = code;
+    this.body = obj.asJson();
+    this.contentType = "application/json";
+  }
 
-    public Response(Object bean) {
-        this(ResponseCodes.OK, bean);
-    }
+  public Response(JsonObject obj) {
+    this(ResponseCodes.OK, obj);
+  }
 
-    private String parseBean(Object bean) {
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            return mapper.writeValueAsString(bean);
-        } catch (JsonProcessingException e) {
-            System.out.println("Problem generating the JSON from bean");
-        }
-        return "";
-    }
+  public String getBody() {
+    return body;
+  }
 
-    public String getBody() {
-        return body;
-    }
+  public ResponseCodes getCode() {
+    return code;
+  }
 
-    public ResponseCodes getCode() {
-        return code;
-    }
-
-    public String getContentType() {
-        return contentType;
-    }
+  public String getContentType() {
+    return contentType;
+  }
 }

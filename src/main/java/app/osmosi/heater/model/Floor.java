@@ -1,94 +1,114 @@
 package app.osmosi.heater.model;
 
-public class Floor {
-    private String name;
-    private double desiredTemp;
-    private double setBackTemp;
-    private double actualTemp;
-    private Switch heaterState;
-    private String mqtt;
-    private int sonoffChannel;
-    private long lastUpdate;
+import static app.osmosi.heater.utils.JsonObjectBuilder.*;
 
-    public Floor(String name, double desiredTemp, double setBackTemp, double actualTemp, Switch heaterState, String mqtt, int sonoffChannel, long lastUpdate) {
-        this.name = name;
-        this.desiredTemp = desiredTemp;
-        this.setBackTemp = setBackTemp;
-        this.actualTemp = actualTemp;
-        this.heaterState = heaterState;
-        this.mqtt = mqtt;
-        this.sonoffChannel = sonoffChannel;
-        this.lastUpdate = lastUpdate;
-    }
+import java.io.Serializable;
+import java.util.Objects;
 
-    public Floor withActualTemp(double actualTemp) {
-        Floor f = from(this);
-        f.actualTemp = actualTemp;
-        return f;
-    }
+public class Floor implements JsonObject, Serializable {
+  private static final long serialVersionUID = 1L;
+  private String name;
+  private double desiredTemp;
+  private double setBackTemp;
+  private double actualTemp;
+  private Switch heaterState;
+  private long lastUpdate;
 
-    public Floor withDesiredTemp(double desiredTemp) {
-        Floor f = from(this);
-        f.desiredTemp = desiredTemp;
-        return f;
-    }
+  public Floor(String name, double desiredTemp, double setBackTemp, double actualTemp, Switch heaterState,
+      long lastUpdate) {
+    this.name = name;
+    this.desiredTemp = desiredTemp;
+    this.setBackTemp = setBackTemp;
+    this.actualTemp = actualTemp;
+    this.heaterState = heaterState;
+    this.lastUpdate = lastUpdate;
+  }
 
-    public Floor withSetBackTemp(double setBackTemp) {
-        Floor f = from(this);
-        f.setBackTemp = setBackTemp;
-        return f;
-    }
+  public Floor withActualTemp(double actualTemp) {
+    Floor f = from(this);
+    f.actualTemp = actualTemp;
+    return f;
+  }
 
-    public Floor withHeaterState(Switch heaterState) {
-        Floor f = from(this);
-        f.heaterState = heaterState;
-        return f;
-    }
+  public Floor withDesiredTemp(double desiredTemp) {
+    Floor f = from(this);
+    f.desiredTemp = desiredTemp;
+    return f;
+  }
 
-    public Floor withLastUpdate(long lastUpdate) {
-        Floor f = from(this);
-        f.lastUpdate = lastUpdate;
-        return f;
-    }
+  public Floor withSetBackTemp(double setBackTemp) {
+    Floor f = from(this);
+    f.setBackTemp = setBackTemp;
+    return f;
+  }
 
-    private Floor from(Floor f) {
-        return new Floor(f.getName(), f.getDesiredTemp(), f.getSetBackTemp(), f.getActualTemp(), f.getHeaterState(),
-                f.getMqtt(), f.getSonoffChannel(), f.getLastUpdate());
-    }
+  public Floor withHeaterState(Switch heaterState) {
+    Floor f = from(this);
+    f.heaterState = heaterState;
+    return f;
+  }
 
-    public long getLastUpdate() {
-        return lastUpdate;
-    }
+  public Floor withLastUpdate(long lastUpdate) {
+    Floor f = from(this);
+    f.lastUpdate = lastUpdate;
+    return f;
+  }
 
-    public int getSonoffChannel() {
-        return sonoffChannel;
-    }
+  private Floor from(Floor f) {
+    return new Floor(f.getName(), f.getDesiredTemp(), f.getSetBackTemp(), f.getActualTemp(), f.getHeaterState(),
+        f.getLastUpdate());
+  }
 
-    public String getMqtt() {
-        return mqtt;
-    }
+  public long getLastUpdate() {
+    return lastUpdate;
+  }
 
-    public Switch getHeaterState() {
-        return heaterState;
-    }
+  public Switch getHeaterState() {
+    return heaterState;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public double getActualTemp() {
-        return actualTemp;
-    }
+  public double getActualTemp() {
+    return actualTemp;
+  }
 
-    public double getSetBackTemp() {
-        return setBackTemp;
-    }
+  public double getSetBackTemp() {
+    return setBackTemp;
+  }
 
-    public double getDesiredTemp() {
-        return setBackTemp > 0 ? setBackTemp : desiredTemp;
-    }
+  public double getDesiredTemp() {
+    return setBackTemp > 0 ? setBackTemp : desiredTemp;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o)
+      return true;
+    if (o == null || getClass() != o.getClass())
+      return false;
+    Floor that = (Floor) o;
+    return name == that.name;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(name);
+  }
+
+  public String asJson() {
+    return object(
+        text("name", getName()),
+        number("desiredTemp", getDesiredTemp()),
+        number("setBackTemp", getSetBackTemp()),
+        number("actualTemp", getActualTemp()),
+        text("heaterState", getHeaterState().toString()),
+        number("lastUpdate", getLastUpdate()));
+  }
 }

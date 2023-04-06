@@ -1,8 +1,12 @@
 package app.osmosi.heater.model;
 
+import static app.osmosi.heater.utils.JsonObjectBuilder.*;
+
+import java.io.Serializable;
 import java.util.Objects;
 
-public class HotWaterTimer {
+public class HotWaterTimer implements JsonObject, Serializable {
+  private static final long serialVersionUID = 1L;
   private final int hours;
   private final int minutes;
   private final int timeout;
@@ -42,5 +46,11 @@ public class HotWaterTimer {
   @Override
   public int hashCode() {
     return Objects.hash(hours, minutes, timeout);
+  }
+
+  public String asJson() {
+    return object(
+        text("time", String.format("%d:%d", getHours(), getMinutes())),
+        number("timeout", getTimeout()));
   }
 }

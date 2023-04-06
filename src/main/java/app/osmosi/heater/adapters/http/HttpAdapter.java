@@ -11,7 +11,9 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
 
 import app.osmosi.heater.adapters.Adapter;
 import app.osmosi.heater.model.AppState;
@@ -19,6 +21,7 @@ import app.osmosi.heater.model.Floor;
 import app.osmosi.heater.model.Switch;
 import app.osmosi.heater.store.Store;
 import app.osmosi.heater.utils.Env;
+import app.osmosi.heater.utils.Logger;
 import app.osmosi.heater.utils.MobileNotification;
 
 public class HttpAdapter implements Adapter {
@@ -26,19 +29,18 @@ public class HttpAdapter implements Adapter {
   private List<CentralHeatingConfig> centralHeatingConfigs;
   private Map<String, List<CentralHeatingConfig>> configsByFloorName;
 
-  public HttpAdapter(File configFile) throws IOException {
-    ObjectMapper om = new ObjectMapper();
-    config = om.readValue(configFile, HttpAdapterConfig.class);
+  public HttpAdapter(File configFile) throws IOException, ParserConfigurationException, SAXException {
+    config = new HttpAdapterConfig(configFile);
     centralHeatingConfigs = config.getCentralHeating();
     configsByFloorName = centralHeatingConfigs.stream()
         .collect(Collectors.groupingBy(CentralHeatingConfig::getFloorName));
   }
 
-  private void doRequest(String urlString, String method, String payload) {
+  private void doRequest(String urlString, String method, Optional<String> payload) {
     if (Env.DEBUG) {
-      System.out.println(method + ": " + urlString);
-      if (payload != null) {
-        System.out.println(payload);
+      Logger.info(method + ": " + urlString);
+      if (payload.isPresent()) {
+        Logger.info(payload.get());
       }
     } else {
       try {
@@ -47,19 +49,19 @@ public class HttpAdapter implements Adapter {
         con.setRequestMethod(method);
         con.setRequestProperty("Content-Type", "application/json");
 
-        if (method.equals("POST")) {
+        if (method.equals("POST") && payload.isPresent()) {
           DataOutputStream wr;
           con.setDoOutput(true);
           wr = new DataOutputStream(con.getOutputStream());
-          wr.writeBytes(payload);
+          wr.writeBytes(payload.get());
           wr.flush();
           wr.close();
-          System.out.println("Payload sent:");
-          System.out.println(payload);
+          Logger.debug("Payload sent:");
+          Logger.debug(payload);
         }
 
-        System.out.println("Response Code:");
-        System.out.println(con.getResponseCode());
+        Logger.debug("Response Code:");
+        Logger.debug(con.getResponseCode());
 
         con.disconnect();
       } catch (IOException e) {
@@ -94,14 +96,17 @@ public class HttpAdapter implements Adapter {
     configsByFloorName.keySet().forEach(addSubscriber);
 
     // Adds HotWater Subscriber
-    store.subscribe(s -> s.getHotWater().getState(),
-        s -> handleSwitch(s.getHotWater().getState(), config.getHotWater()));
+    if (config.getHotWater().isPresent()) {
+      store.subscribe(s -> s.getHotWater().getState(),
+          s -> handleSwitch(s.getHotWater().getState(), config.getHotWater().get()));
+    }
   }
 
   @Override
   public void sync(AppState state) {
     state.getFloors().forEach(this::handleFloor);
-    handleSwitch(state.getHotWater().getState(), config.getHotWater());
+    if (config.getHotWater().isPresent()) {
+      handleSwitch(state.getHotWater().getState(), config.getHotWater().get());
+    }
   }
-
 }

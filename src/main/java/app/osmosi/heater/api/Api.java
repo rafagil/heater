@@ -7,6 +7,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.xml.parsers.ParserConfigurationException;
+
+import org.xml.sax.SAXException;
+
 import app.osmosi.heater.adapters.Adapter;
 import app.osmosi.heater.adapters.http.HttpAdapter;
 import app.osmosi.heater.model.AppState;
@@ -44,20 +48,34 @@ public class Api {
       AppState persisted = AppStatePersister.loadState();
       store = new Store<AppState>(persisted, reducer);
     } catch (IOException e) {
-      System.out.println("Failed to load persisted state. Falling back to a clean state");
-      store = new Store<AppState>(new AppState(new Floor("Cima", 0, 0, 99, Switch.OFF, "Suite", 2, 0),
-          new Floor("Baixo", 0, 0, 99, Switch.OFF, "Sala", 3, 0),
+      Logger.info("Failed to load persisted state. Falling back to a clean state");
+      store = new Store<AppState>(new AppState(
           new HotWater(Switch.OFF),
-          Set.of()), reducer);
+          Set.of(),
+          new Floor("Cima", 0, 0, 99, Switch.OFF, 0),
+          new Floor("Baixo", 0, 0, 99, Switch.OFF, 0)), reducer);
+    } catch (ClassNotFoundException e) {
+      Logger.error("ClassNotFoundException. Shouldn't happen, shutting Down.");
+      e.printStackTrace();
+      System.exit(10);
     }
+
     // Adapters:
     try {
-      HttpAdapter httpAdapter = new HttpAdapter(new File(Env.CONFIG_PATH + "/http-adapter.json"));
+      HttpAdapter httpAdapter = new HttpAdapter(new File(Env.CONFIG_PATH + "/http-adapter.xml"));
       adapters = List.of(httpAdapter); // Multiple adapters can be combined here
       adapters.forEach(a -> a.addSubscribers(store));
+    } catch (ParserConfigurationException e) {
+      e.printStackTrace();
+      Logger.error("Failed to parse the HttpAdapter config file. Can't continue");
+      System.exit(3);
+    } catch (SAXException e) {
+      e.printStackTrace();
+      Logger.error("Failed to parse the HttpAdapter config file. Can't continue");
+      System.exit(2);
     } catch (IOException e) {
       e.printStackTrace();
-      System.out.println("Failed to load the adapters. Can't contiunue.");
+      Logger.error("Failed to load the adapters. Can't contiunue.");
       System.exit(1);
     }
 
