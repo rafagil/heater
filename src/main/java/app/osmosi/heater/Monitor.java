@@ -104,6 +104,7 @@ public class Monitor {
         Api.turnOffHotWater();
       } else if (!sentHeaterOn && minuteCounter > warningLimit) {
         sendNotification("Warning: Heater is been ON for " + (warningLimit / 60) + "h");
+        sentHeaterOn = true;
       }
     }, timeout);
     return it;
