@@ -1,0 +1,36 @@
+<root>
+  <centralheating>
+    <floor name="Cima">
+      <request on="http://url" off="http://url" method="POST">
+        <on-payload>
+          <![CDATA[{}]]>
+        </on-payload>
+        <off-payload>
+          <![CDATA[{}]]>
+        </off-payload>
+      </request>
+    </floor>
+    <floor name="Baixo">
+      <request on="http://url" off="http://url" method="POST">
+        <on-payload>
+          <![CDATA[ 
+            {}
+          ]]>
+        </on-payload>
+        <off-payload>
+          <![CDATA[{}]]>
+        </off-payload>
+      </request>
+    </floor> 
+  </centralheating>
+  <hotwater>
+    <request on="http://url" off="http://url" method="POST">
+      <on-payload>
+        <![CDATA[{}]]>
+      </on-payload>
+      <off-payload>
+        <![CDATA[{}]]>
+      </off-payload>
+    </request>
+  </hotwater>
+</root>
