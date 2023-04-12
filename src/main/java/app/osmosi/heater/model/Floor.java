@@ -55,8 +55,7 @@ public class Floor implements JsonObject, Serializable {
   }
 
   private Floor from(Floor f) {
-    return new Floor(f.getName(), f.getDesiredTemp(), f.getSetBackTemp(), f.getActualTemp(), f.getHeaterState(),
-        f.getLastUpdate());
+    return new Floor(f.name, f.desiredTemp, f.setBackTemp, f.actualTemp, f.heaterState, f.lastUpdate);
   }
 
   public long getLastUpdate() {

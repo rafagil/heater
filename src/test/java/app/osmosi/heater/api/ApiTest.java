@@ -104,4 +104,21 @@ public class ApiTest {
     assertEquals(Switch.OFF, Api.getCurrentState().getFloorByName("Cima").getHeaterState());
   }
 
+  @Test
+  public void temperatureShouldBackToNormalIfSetBackIsZero() {
+    AppReducer reducer = new AppReducer();
+    Store<AppState> store = new Store<AppState>(new AppState(
+        new HotWater(Switch.OFF),
+        Set.of(),
+        new Floor("Cima", 20, 0, 99, Switch.OFF, 0),
+        new Floor("Baixo", 21, 0, 99, Switch.OFF, 0)), reducer);
+
+    Api.init(store, List.of());
+    assertEquals(20, Api.getCurrentState().getFloorByName("Cima").getDesiredTemp(), 0);
+    Api.updateFloor(Api.getCurrentState().getFloorByName("Cima").withSetBackTemp(19));
+    assertEquals(19, Api.getCurrentState().getFloorByName("Cima").getDesiredTemp(), 0);
+    Api.updateFloor(Api.getCurrentState().getFloorByName("Cima").withSetBackTemp(0));
+    assertEquals(20, Api.getCurrentState().getFloorByName("Cima").getDesiredTemp(), 0);
+  }
+
 }
