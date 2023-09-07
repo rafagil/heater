@@ -13,7 +13,7 @@ There is no UI at the moment, but it's meant to be easily integrated with mobile
 ### Manual Build
 this is a maven project, so it can be built using 
 ```
-$ mvn assembly:assembly -DdescriptorId=jar-with-dependencies
+$ mvn compile assembly:single
 ```
 ### Native Build
 This project also contains a script called "build.sh" that will build the jar and natively compile it to a binary file.  

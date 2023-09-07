@@ -4,6 +4,9 @@ import static app.osmosi.heater.utils.JsonObjectBuilder.*;
 
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Set;
+
+import app.osmosi.heater.utils.JsonObjectBuilder;
 
 public class Floor implements JsonObject, Serializable {
   private static final long serialVersionUID = 1L;
@@ -13,15 +16,17 @@ public class Floor implements JsonObject, Serializable {
   private double actualTemp;
   private Switch heaterState;
   private long lastUpdate;
+  private Set<Device> activeDevices;
 
   public Floor(String name, double desiredTemp, double setBackTemp, double actualTemp, Switch heaterState,
-      long lastUpdate) {
+               long lastUpdate, Set<Device> activeDevices) {
     this.name = name;
     this.desiredTemp = desiredTemp;
     this.setBackTemp = setBackTemp;
     this.actualTemp = actualTemp;
     this.heaterState = heaterState;
     this.lastUpdate = lastUpdate;
+    this.activeDevices = activeDevices;
   }
 
   public Floor withActualTemp(double actualTemp) {
@@ -54,8 +59,14 @@ public class Floor implements JsonObject, Serializable {
     return f;
   }
 
+  public Floor withActiveDevices(Set<Device> activeDevices) {
+    Floor f = from(this);
+    f.activeDevices = activeDevices;
+    return f;
+  }
+
   private Floor from(Floor f) {
-    return new Floor(f.name, f.desiredTemp, f.setBackTemp, f.actualTemp, f.heaterState, f.lastUpdate);
+      return new Floor(f.name, f.desiredTemp, f.setBackTemp, f.actualTemp, f.heaterState, f.lastUpdate, f.activeDevices);
   }
 
   public long getLastUpdate() {
@@ -86,6 +97,10 @@ public class Floor implements JsonObject, Serializable {
     return name;
   }
 
+  public Set<Device> getActiveDevices() {
+    return activeDevices;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o)
@@ -108,6 +123,7 @@ public class Floor implements JsonObject, Serializable {
         number("setBackTemp", getSetBackTemp()),
         number("actualTemp", getActualTemp()),
         text("heaterState", getHeaterState().toString()),
+        key("activeDevices", array(activeDevices.stream().map(Device::toString).map(JsonObjectBuilder::text))),
         number("lastUpdate", getLastUpdate()));
   }
 }

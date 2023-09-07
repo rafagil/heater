@@ -14,6 +14,10 @@ public class JsonObjectBuilder {
     return nonText(key, number.toString());
   }
 
+  public static String text(String text) {
+    return "\"" + text + "\"";
+  }
+
   public static String text(String key, String text) {
     return String.format("\"%s\": \"%s\"", key, text);
   }

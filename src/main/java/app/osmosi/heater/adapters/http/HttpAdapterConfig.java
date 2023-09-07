@@ -58,13 +58,14 @@ public class HttpAdapterConfig {
   private CentralHeatingConfig parseCHConfig(Node ch) {
     Element floor = (Element) ch;
     String floorName = floor.getAttribute("name");
+    String deviceName = floor.getAttribute("device");
     var requestNode = firstChild(ch.getChildNodes(), "request");
     RequestConfig request = null;
     if (requestNode.isPresent()) {
       Element requestElement = (Element) requestNode.get();
       request = parseRequest(requestElement);
     }
-    return new CentralHeatingConfig(floorName, request);
+    return new CentralHeatingConfig(floorName, deviceName, request);
   }
 
   public HttpAdapterConfig(File file) throws IOException, SAXException, ParserConfigurationException {

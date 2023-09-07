@@ -12,3 +12,6 @@
 * DONE Add proper Logging (instead of System.out.println)
 * DONE Avoid duplicates in HotWaterTimer (use Set?)
 * TODO Move Logger to app.osmosi.log package
+* TODO Rename "Floor" to "Zone"
+* DONE Fix Tests
+

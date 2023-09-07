@@ -17,6 +17,7 @@ import org.xml.sax.SAXException;
 
 import app.osmosi.heater.adapters.Adapter;
 import app.osmosi.heater.model.AppState;
+import app.osmosi.heater.model.Device;
 import app.osmosi.heater.model.Floor;
 import app.osmosi.heater.model.Switch;
 import app.osmosi.heater.store.Store;
@@ -82,14 +83,29 @@ public class HttpAdapter implements Adapter {
   private void handleFloor(Floor f) {
     Optional.ofNullable(configsByFloorName.get(f.getName()))
         .orElse(List.of())
+        .stream()
+        .filter(config -> f.getActiveDevices().contains(Device.valueOf(config.getDeviceName())))
         .forEach(c -> handleSwitch(f.getHeaterState(), c.getRequest()));
+  }
+
+  private void turnOffUnusedDevices(Floor f) {
+    Optional.ofNullable(configsByFloorName.get(f.getName()))
+      .orElse(List.of())
+      .stream()
+      .filter(config -> !f.getActiveDevices().contains(Device.valueOf(config.getDeviceName())))
+      .forEach(config -> handleSwitch(Switch.OFF, config.getRequest()));
   }
 
   @Override
   public void addSubscribers(Store<AppState> store) {
     Consumer<String> addSubscriber = name -> {
+      // Subscribe to changes in the heater state (ON/OFF):
       store.subscribe(s -> s.getFloorByName(name).getHeaterState(),
           appState -> handleFloor(appState.getFloorByName(name)));
+
+      // Subscribe to device changes to turn them off if not active:
+      store.subscribe(s -> s.getFloorByName(name).getActiveDevices(),
+                appState -> turnOffUnusedDevices(appState.getFloorByName(name)));
     };
 
     // Adds Central Heating Subscribers
@@ -105,6 +121,7 @@ public class HttpAdapter implements Adapter {
   @Override
   public void sync(AppState state) {
     state.getFloors().forEach(this::handleFloor);
+    state.getFloors().forEach(this::turnOffUnusedDevices);
     if (config.getHotWater().isPresent()) {
       handleSwitch(state.getHotWater().getState(), config.getHotWater().get());
     }

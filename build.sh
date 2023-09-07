@@ -1,5 +1,5 @@
 #!/bin/bash
-mvn assembly:assembly -DdescriptorId=jar-with-dependencies
+mvn clean compile assembly:single &&
 native-image \
 	-H:SerializationConfigurationFiles=./config/serialization-config.json \
 	-H:ReflectionConfigurationFiles=./config/reflect-config.json \
