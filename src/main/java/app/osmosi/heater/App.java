@@ -72,6 +72,16 @@ public class App {
     }
   }
 
+  private static Response reloadSchedule(Request req) {
+    scheduler.stop();
+	try {
+	  scheduler.start();
+	  return new Response("OK");
+	} catch (IOException e) {
+	  return new Response(ResponseCodes.SERVER_ERROR, "Could not reload schedule. Scheduler is stopped");
+	}
+  }
+
   private static Response turnOnHotWater(Request req) {
     Api.turnOnHotWater(Integer.valueOf(req.getQueryParams().get("timeout")) * 60 * 1000);
     return new Response(Api.getCurrentState().getHotWater());
@@ -85,8 +95,7 @@ public class App {
   }
 
   private static Response travelMode(Request req) {
-    hwTimer.stop();
-    return setBack(15);
+    hwTimer.stop(); return setBack(15);
   }
 
   private static Response backHome(Request req) {
@@ -137,8 +146,7 @@ public class App {
         "temp");
     app.get("/warmer", App::warmer, "name");
     app.get("/cooler", App::cooler, "name");
-    // app.get("/reload-schedule") -> should be equal to hotwater schedule
-    // (persisted on AppState)
+    app.get("/reload-schedule", App::reloadSchedule);
 
     // Hot Water
     app.get("/reload-timers", App::reloadTimers);
