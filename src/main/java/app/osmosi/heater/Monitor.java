@@ -24,9 +24,9 @@ public class Monitor {
   private static final int LOW_CREDIT_THRESHOLD = 12;
   // TODO: Think of a better way to implment these vars:
   static int minuteCounter = 0;
+  static int creditMinuteCounter = 0;
   static boolean sentHeaterOn = false;
   static boolean sentCredits = false;
-  static float lastBalance = 0;
 
   private static int minutesToMs(int minutes) {
     return minutes * 60 * 1000;
@@ -63,14 +63,20 @@ public class Monitor {
         }
 
         if (!sentCredits && balance < LOW_CREDIT_THRESHOLD) {
+		  creditMinuteCounter = 0;
           sendNotification("Running out of gas credits!");
           sentCredits = true;
         }
 
-        if (balance > lastBalance) {
+        if (balance > LOW_CREDIT_THRESHOLD) {
           sentCredits = false;
         }
 
+        creditMinuteCounter += 1;
+        if (creditMinuteCounter > 120) {
+          creditMinuteCounter = 0;
+          sentCredits = false;
+        }
       } catch (IOException e) {
         String msg = "Could not update current balance.";
         sendNotification(msg);
