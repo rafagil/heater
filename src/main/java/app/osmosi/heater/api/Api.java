@@ -56,7 +56,7 @@ public class Api {
 					Set.of(),
 					new Floor("Cima", 0, 0, 99, Switch.OFF, 0, activeDevices),
 					new Floor("Baixo", 0, 0, 99, Switch.OFF, 0, activeDevices),
-			//		new Floor("Suite", 0, 0, 99, Switch.OFF, 0, Set.of(Device.ELECTRIC)),
+					new Floor("Suite", 0, 0, 99, Switch.OFF, 0, Set.of(Device.ELECTRIC)),
 					new Floor("Office", 0, 0, 99, Switch.OFF, 0, Set.of(Device.ELECTRIC))),
 					reducer);
 		} catch (ClassNotFoundException e) {
