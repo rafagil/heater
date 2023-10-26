@@ -9,14 +9,14 @@ import app.osmosi.heater.store.actions.Action;
 import app.osmosi.heater.store.actions.FloorUpdateAction;
 
 public class FloorsReducer implements Reducer<Set<Floor>> {
-  @Override
-  public Set<Floor> reduce(Action action, Set<Floor> state) {
-    if (action instanceof FloorUpdateAction fua) {
-      Set<Floor> newSet = new HashSet<>(state);
-      newSet.remove(fua.getData());
-      newSet.add(fua.getData());
-      return Collections.unmodifiableSet(newSet);
-    }
-    return state;
-  }
+	@Override
+	public Set<Floor> reduce(Action action, Set<Floor> state) {
+		if (action instanceof FloorUpdateAction fua) {
+			Set<Floor> newSet = new HashSet<>(state);
+			newSet.remove(fua.getData());
+			newSet.add(fua.getData());
+			return Collections.unmodifiableSet(newSet);
+		}
+		return state;
+	}
 }

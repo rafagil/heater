@@ -4,5 +4,5 @@ import app.osmosi.heater.store.actions.Action;
 
 @FunctionalInterface
 public interface Reducer<State> {
-    State reduce(Action action, State state);
+	State reduce(Action action, State state);
 }

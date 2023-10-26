@@ -1,3 +1,4 @@
 package app.osmosi.heater.store.actions;
 
-public interface Action {}
+public interface Action {
+}

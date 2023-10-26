@@ -5,13 +5,13 @@ import java.util.Set;
 import app.osmosi.heater.model.HotWaterTimer;
 
 public class TimerUpdateAction implements Action {
-  private final Set<HotWaterTimer> data;
+	private final Set<HotWaterTimer> data;
 
-  public TimerUpdateAction(Set<HotWaterTimer> timers) {
-    this.data = timers;
-  }
+	public TimerUpdateAction(Set<HotWaterTimer> timers) {
+		this.data = timers;
+	}
 
-  public Set<HotWaterTimer> getData() {
-    return data;
-  }
+	public Set<HotWaterTimer> getData() {
+		return data;
+	}
 }

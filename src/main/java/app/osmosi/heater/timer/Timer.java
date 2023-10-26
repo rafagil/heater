@@ -14,45 +14,45 @@ import app.osmosi.heater.utils.Env;
 import app.osmosi.heater.utils.IntervalThread;
 
 public class Timer {
-  private static final String FILE_PATH = Env.CONFIG_PATH + "/hw-timers.csv";
-  private IntervalThread intervalThread;
+	private static final String FILE_PATH = Env.CONFIG_PATH + "/hw-timers.csv";
+	private IntervalThread intervalThread;
 
-  private int getNowMinutes() {
-    LocalTime now = LocalTime.now();
-    return (now.getHour() * 60) + now.getMinute();
-  }
+	private int getNowMinutes() {
+		LocalTime now = LocalTime.now();
+		return (now.getHour() * 60) + now.getMinute();
+	}
 
-  public void reloadTimers() throws IOException {
-    Set<HotWaterTimer> fileTimers = HotWaterTimerParser.parse(new File(FILE_PATH));
-    Api.updateTimers(fileTimers);
-  }
+	public void reloadTimers() throws IOException {
+		Set<HotWaterTimer> fileTimers = HotWaterTimerParser.parse(new File(FILE_PATH));
+		Api.updateTimers(fileTimers);
+	}
 
-  public void start() {
-    Set<HotWaterTimer> timers = Api.getCurrentState().getTimers();
+	public void start() {
+		Set<HotWaterTimer> timers = Api.getCurrentState().getTimers();
 
-    Map<Integer, HotWaterTimer> timerMap = timers.stream()
-        .collect(Collectors.toMap(HotWaterTimer::getTotalMinutes, Function.identity()));
+		Map<Integer, HotWaterTimer> timerMap = timers.stream()
+				.collect(Collectors.toMap(HotWaterTimer::getTotalMinutes, Function.identity()));
 
-    intervalThread = new IntervalThread(() -> {
-      HotWaterTimer timer = timerMap.get(getNowMinutes());
-      if (timer != null) {
-        Api.turnOnHotWater(timer.getTimeout());
-      }
-    }, 60000);
+		intervalThread = new IntervalThread(() -> {
+			HotWaterTimer timer = timerMap.get(getNowMinutes());
+			if (timer != null) {
+				Api.turnOnHotWater(timer.getTimeout());
+			}
+		}, 60000);
 
-    new Thread(intervalThread).start();
-  }
+		new Thread(intervalThread).start();
+	}
 
-  public void stop() {
-    if (intervalThread != null) {
-      intervalThread.stop();
-    }
-  }
+	public void stop() {
+		if (intervalThread != null) {
+			intervalThread.stop();
+		}
+	}
 
-  public boolean isRunning() {
-    if (intervalThread == null) {
-      return false;
-    }
-    return intervalThread.isRunning();
-  }
+	public boolean isRunning() {
+		if (intervalThread == null) {
+			return false;
+		}
+		return intervalThread.isRunning();
+	}
 }

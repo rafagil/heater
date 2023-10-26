@@ -31,7 +31,8 @@ public class HttpServer {
 					Request req = RequestParser.parse(request, in);
 					Response resp = onRequestFn.apply(req);
 					String newLine = "\r\n";
-					printStream.print("HTTP/1.1 " + resp.getCode().code + " " + resp.getCode().description);
+					printStream.print("HTTP/1.1 " + resp.getCode().code + " "
+							+ resp.getCode().description);
 					printStream.print(newLine);
 					printStream.print("Content-type: " + resp.getContentType());
 					printStream.print(newLine);

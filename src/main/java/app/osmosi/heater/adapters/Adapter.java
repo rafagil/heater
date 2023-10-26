@@ -4,6 +4,7 @@ import app.osmosi.heater.model.AppState;
 import app.osmosi.heater.store.Store;
 
 public interface Adapter {
-    void addSubscribers(Store<AppState> store);
-    void sync(AppState state);
+	void addSubscribers(Store<AppState> store);
+
+	void sync(AppState state);
 }
