@@ -90,7 +90,10 @@ public class Floor implements JsonObject, Serializable {
   }
 
   public double getDesiredTemp() {
-    return setBackTemp > 0 ? setBackTemp : desiredTemp;
+    if (setBackTemp > 0 && setBackTemp < desiredTemp) {
+		return setBackTemp;
+	}
+	return desiredTemp;
   }
 
   public String getName() {

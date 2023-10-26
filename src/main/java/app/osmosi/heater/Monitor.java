@@ -13,20 +13,19 @@ import app.osmosi.heater.api.Api;
 import app.osmosi.heater.model.AppState;
 import app.osmosi.heater.model.Floor;
 import app.osmosi.heater.model.Switch;
+import app.osmosi.heater.model.Device;
 import app.osmosi.heater.utils.Env;
 import app.osmosi.heater.utils.FileUtils;
+import app.osmosi.heater.utils.IntervalStateThread;
 import app.osmosi.heater.utils.IntervalThread;
 import app.osmosi.heater.utils.Logger;
+import app.osmosi.heater.utils.Worker;
 
 public class Monitor {
-  private static List<IntervalThread> threads;
+  private static List<Worker> threads;
   public static final String BALANCE_FILE_PATH = Env.DB_PATH + "/balance.txt";
   private static final int LOW_CREDIT_THRESHOLD = 12;
-  // TODO: Think of a better way to implment these vars:
-  static int minuteCounter = 0;
-  static int creditMinuteCounter = 0;
-  static boolean sentHeaterOn = false;
-  static boolean sentCredits = false;
+  private static final int CREDIT_NOTIF_INTERVAL = 120; // Minutes between notifications.
 
   private static int minutesToMs(int minutes) {
     return minutes * 60 * 1000;
@@ -41,48 +40,44 @@ public class Monitor {
 
   /**
    * Returns true if any of the Switches is turned ON.
+   * Also filters by the type of Device passed
    */
-  private static boolean isHeaterOn() {
+  private static boolean isHeaterOn(Device device) {
     AppState state = Api.getCurrentState();
     boolean floorIsOn = state.getFloors().stream()
+		.filter(f -> device == null || f.getActiveDevices().contains(device))
         .anyMatch(f -> f.getHeaterState() == Switch.ON);
     return floorIsOn || state.getHotWater().getState() == Switch.ON;
   }
 
-  private static IntervalThread monitorCredits() {
-    final float hourlyRate = 1; // 1 EUR per how (approx)
+  private static IntervalStateThread<Integer> monitorCredits() {
+    final float hourlyRate = 1; // 1 EUR per hour (approx)
     final float minuteRate = hourlyRate / 60;
     final int timeout = minutesToMs(1);
-    IntervalThread it = new IntervalThread(() -> {
+    IntervalStateThread<Integer> it = new IntervalStateThread<>((minutes) -> {
       try (Stream<String> lines = FileUtils.read(BALANCE_FILE_PATH)) {
         Optional<String> line = lines.findFirst();
         float balance = Float.valueOf(line.orElse("0"));
 
-        if (isHeaterOn()) {
+        if (isHeaterOn(Device.GAS)) {
           FileUtils.write(BALANCE_FILE_PATH, String.valueOf(balance - minuteRate));
         }
 
-        if (!sentCredits && balance < LOW_CREDIT_THRESHOLD) {
-		  creditMinuteCounter = 0;
-          sendNotification("Running out of gas credits!");
-          sentCredits = true;
-        }
-
-        if (balance > LOW_CREDIT_THRESHOLD) {
-          sentCredits = false;
-        }
-
-        creditMinuteCounter += 1;
-        if (creditMinuteCounter > 120) {
-          creditMinuteCounter = 0;
-          sentCredits = false;
-        }
+		if (balance < LOW_CREDIT_THRESHOLD) {
+		  if (minutes == CREDIT_NOTIF_INTERVAL) {
+		    sendNotification("Running out of gas credits!");
+		    return 0;
+	      } else {
+		    return minutes + 1;
+		  }
+		}
       } catch (IOException e) {
         String msg = "Could not update current balance.";
         sendNotification(msg);
         Logger.error(msg);
       }
-    }, timeout);
+	  return CREDIT_NOTIF_INTERVAL;
+    }, timeout, CREDIT_NOTIF_INTERVAL);
     return it;
   }
 
@@ -92,47 +87,75 @@ public class Monitor {
    * limit.
    * it will shut down the heating when it exceeds the critical limit.
    */
-  private static IntervalThread monitorOnStatus() {
+  private static IntervalStateThread<Integer> monitorOnStatus() {
     final int timeout = minutesToMs(1);
     final int warningLimit = 120; // 2h
     final int criticalLimit = 240; // 4h
 
-    IntervalThread it = new IntervalThread(() -> {
-      if (isHeaterOn()) {
-        minuteCounter += 1;
-      } else {
-        minuteCounter = 0;
-        sentHeaterOn = false;
-      }
-      if (minuteCounter > criticalLimit) {
-        sendNotification("Critical: Heater will be shut down. Use 'Back Home' to turn it on again.");
+    IntervalStateThread<Integer> it = new IntervalStateThread<>((minutes) -> {
+      if (minutes > criticalLimit) {
+        sendNotification("Critical: Gas Heater will be shut down. Use 'Back Home' to turn it on again.");
         Api.getCurrentState().getFloors().forEach(f -> Api.updateFloor(f.withSetBackTemp(1)));
         Api.turnOffHotWater();
-      } else if (!sentHeaterOn && minuteCounter > warningLimit) {
-        sendNotification("Warning: Heater is been ON for " + (warningLimit / 60) + "h");
-        sentHeaterOn = true;
+		return 0;
+      } else if (minutes == warningLimit) {
+        sendNotification("Warning: Gas Heater is been ON for " + (warningLimit / 60) + "h");
       }
-    }, timeout);
+	  if (isHeaterOn(Device.GAS)) {
+		return minutes + 1;
+	  }
+	  return 0;
+    }, timeout, 0);
     return it;
+  }
+
+  private static IntervalStateThread<Map<Floor, Integer>> monitorZoneStatus() {
+    final int timeout = minutesToMs(1);
+	final int warningLimit = 120; //2h
+    final int criticalLimit = 240; //4h
+    
+	IntervalStateThread<Map<Floor, Integer>> it = new IntervalStateThread<>((state) -> {
+      AppState appState = Api.getCurrentState();
+	  appState.getFloors().forEach(f -> {
+		if (state.get(f) == null) {
+		  state.put(f, 0);
+		}
+		if (f.getHeaterState() == Switch.ON) {
+		  state.put(f, state.get(f) + 1);
+		} else {
+		  state.put(f, 0);
+		}
+
+		if (state.get(f) > criticalLimit) {
+		  sendNotification("Critical: " + f.getName() + " will be shut down. Use 'Back Home' to turn it on again.");
+		  Api.updateFloor(f.withSetBackTemp(1));
+		} else if (state.get(f) == warningLimit) {
+		  sendNotification("Warning: " + f.getName() + " is been ON for " + (warningLimit / 60) + "h");
+		}
+	  });
+      return state; 
+	}, timeout, new HashMap<Floor, Integer>());
+
+	return it;
   }
 
   /**
    * Checks when was the last time the temperature was updated
    * if it wasn't updated after the timeout, it will turn off the heating.
    */
-  private static IntervalThread monitorThermometers() {
+  private static IntervalStateThread<Map<Floor, Long>> monitorThermometers() {
     int timeout = minutesToMs(30);
-    Map<String, Long> lastUpdate = new HashMap<>();
-    IntervalThread t = new IntervalThread(() -> {
-      AppState state = Api.getCurrentState();
-      state.getFloors().forEach(f -> {
-        if (lastUpdate.get(f.getName()) != null && lastUpdate.get(f.getName()) == f.getLastUpdate()) {
+    IntervalStateThread<Map<Floor, Long>> t = new IntervalStateThread<>((lastUpdate) -> {
+      AppState appState = Api.getCurrentState();
+      appState.getFloors().forEach(f -> {
+        if (lastUpdate.get(f) != null && lastUpdate.get(f) == f.getLastUpdate()) {
           notifyAndShutDown(f);
         } else {
-          lastUpdate.put(f.getName(), f.getLastUpdate());
+          lastUpdate.put(f, f.getLastUpdate());
         }
       });
-    }, timeout);
+	  return lastUpdate;
+    }, timeout, new HashMap<>());
 
     return t;
   }
@@ -141,8 +164,9 @@ public class Monitor {
     Logger.info("Monitoring is ON");
     threads = List.of(monitorThermometers(),
         monitorOnStatus(),
+		monitorZoneStatus(),
         monitorCredits());
-    threads.forEach(it -> new Thread(it).start());
+    threads.forEach(it -> it.start());
   }
 
   public void stop() {

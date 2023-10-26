@@ -16,7 +16,11 @@ public class IntervalThread implements Runnable {
         running = true;
         while(running) {
             runnable.run();
-            try { Thread.sleep(timeout); } catch(InterruptedException e) {}
+            try { 
+				Thread.sleep(timeout);
+			} catch(InterruptedException e) {
+				running = false;
+			}
         }
     }
 
