@@ -3,7 +3,7 @@ package app.osmosi.heater.utils;
 import java.util.Optional;
 
 public class Env {
-	public static final boolean DEBUG = true;// Optional.ofNullable(System.getenv("DEBUG")).isPresent();
+	public static final boolean DEBUG = Optional.ofNullable(System.getenv("DEBUG")).isPresent();
 	public static final String CONFIG_PATH = getEnv("CONFIG_PATH", "./config");
 	public static final String DB_PATH = getEnv("DB_PATH", "./db");
 
