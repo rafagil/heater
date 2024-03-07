@@ -1,0 +1,24 @@
+|--------+-------+--------------+---------------+--------------|
+| Zone   |  Time | Desired temp | Days of week  | Devices      |
+|--------+-------+--------------+---------------+--------------|
+| Baixo  |  7:00 |           21 | 1 2 3 4 5     | ELECTRIC GAS |
+| Baixo  |  8:00 |           21 | 1 2 3 4 5     | GAS          |
+| Baixo  |  8:00 |           22 | 6             | GAS          |
+| Baixo  | 12:00 |           22 | 1 2 3 4 5     | GAS          |
+| Baixo  | 22:00 |           20 | 1 2 3 4 5 6 7 | GAS          |
+| Baixo  | 23:00 |           18 | 1 2 3 4 5 6 7 | ELECTRIC GAS |
+| Baixo  |  8:00 |           20 | 7             | ELECTRIC GAS |
+| Baixo  |  9:00 |           22 | 7             | ELECTRIC     |
+| Baixo  | 17:00 |           22 | 7             | GAS          |
+| Cima   |  8:00 |           20 | 1 2 3 4 5 6   | ELECTRIC GAS |
+| Cima   | 18:20 |           22 | 1 2 3 4 5 6 7 | GAS          |
+| Cima   | 23:00 |           21 | 1 2 3 4 5 6 7 | ELECTRIC     |
+| Cima   |  8:00 |           22 | 7             | ELECTRIC     |
+| Cima   | 17:00 |           20 | 7             | GAS          |
+| Office | 08:30 |           20 | 1 2 3 4 5     | ELECTRIC     |
+| Office | 16:30 |           10 | 1 2 3 4 5 6 7 | ELECTRIC     |
+| Suite  |  8:00 |           19 | 1 2 3 4 5 6   | ELECTRIC     |
+| Suite  | 23:00 |           21 | 1 2 3 4 5 6 7 | ELECTRIC     |
+| Suite  |  8:00 |           22 | 7             | ELECTRIC     |
+| Suite  | 17:00 |           19 | 7             | ELECTRIC     |
+|--------+-------+--------------+---------------+--------------|

@@ -11,10 +11,6 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.xml.sax.SAXException;
-
 import app.osmosi.heater.adapters.Adapter;
 import app.osmosi.heater.model.AppState;
 import app.osmosi.heater.model.Device;
@@ -30,8 +26,8 @@ public class HttpAdapter implements Adapter {
 	private List<CentralHeatingConfig> centralHeatingConfigs;
 	private Map<String, List<CentralHeatingConfig>> configsByFloorName;
 
-	public HttpAdapter(File configFile) throws IOException, ParserConfigurationException, SAXException {
-		config = new HttpAdapterConfig(configFile);
+	public HttpAdapter(File chConfigFile, File hwConfigFile) throws IOException {
+		config = new HttpAdapterConfig(chConfigFile, hwConfigFile);
 		centralHeatingConfigs = config.getCentralHeating();
 		configsByFloorName = centralHeatingConfigs.stream()
 				.collect(Collectors.groupingBy(CentralHeatingConfig::getFloorName));
@@ -113,18 +109,14 @@ public class HttpAdapter implements Adapter {
 		configsByFloorName.keySet().forEach(addSubscriber);
 
 		// Adds HotWater Subscriber
-		if (config.getHotWater().isPresent()) {
-			store.subscribe(s -> s.getHotWater().getState(),
-					s -> handleSwitch(s.getHotWater().getState(), config.getHotWater().get()));
-		}
+		store.subscribe(s -> s.getHotWater().getState(),
+				s -> handleSwitch(s.getHotWater().getState(), config.getHotWater()));
 	}
 
 	@Override
 	public void sync(AppState state) {
 		state.getFloors().forEach(this::handleFloor);
 		state.getFloors().forEach(this::turnOffUnusedDevices);
-		if (config.getHotWater().isPresent()) {
-			handleSwitch(state.getHotWater().getState(), config.getHotWater().get());
-		}
+		handleSwitch(state.getHotWater().getState(), config.getHotWater());
 	}
 }

@@ -19,7 +19,7 @@ import app.osmosi.heater.utils.Env;
 import app.osmosi.heater.utils.IntervalThread;
 
 public class Scheduler {
-	private static final String SCHEDULE_PATH = Env.CONFIG_PATH + "/schedule.csv";
+	private static final String SCHEDULE_PATH = Env.CONFIG_PATH + "/schedule.org";
 	private IntervalThread intervalThread;
 
 	private int getNowMinutes() {

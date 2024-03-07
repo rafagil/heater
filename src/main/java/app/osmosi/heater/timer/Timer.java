@@ -14,7 +14,7 @@ import app.osmosi.heater.utils.Env;
 import app.osmosi.heater.utils.IntervalThread;
 
 public class Timer {
-	private static final String FILE_PATH = Env.CONFIG_PATH + "/hw-timers.csv";
+	private static final String FILE_PATH = Env.CONFIG_PATH + "/hw-timers.org";
 	private IntervalThread intervalThread;
 
 	private int getNowMinutes() {

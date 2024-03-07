@@ -3,5 +3,10 @@ db/*
 config/http-adapter.json
 config/hw-timers.csv
 config/schedule.csv
+config/http-adapter-ch.org
+config/http-adapter-hw.org
+config/hw-timers.org
+config/schedule.org
 target/*
 .settings/*
+svm_err*

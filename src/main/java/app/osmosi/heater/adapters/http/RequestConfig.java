@@ -1,6 +1,7 @@
 package app.osmosi.heater.adapters.http;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public class RequestConfig {
 	private final String onURL;
@@ -20,7 +21,11 @@ public class RequestConfig {
 
 	public RequestConfig(String onURL, String offURL, String method, String onPayload,
 			String offPayload) {
-		this(onURL, offURL, method, Optional.ofNullable(onPayload), Optional.ofNullable(offPayload));
+		this(onURL,
+				offURL,
+				method,
+				Optional.ofNullable(onPayload).filter(Predicate.not(String::isBlank)),
+				Optional.ofNullable(offPayload).filter(Predicate.not(String::isBlank)));
 	}
 
 	public RequestConfig(String onURL, String offURL, String method) {

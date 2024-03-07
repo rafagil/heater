@@ -7,10 +7,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.xml.sax.SAXException;
-
 import app.osmosi.heater.adapters.Adapter;
 import app.osmosi.heater.adapters.http.HttpAdapter;
 import app.osmosi.heater.model.AppState;
@@ -67,17 +63,11 @@ public class Api {
 
 		// Adapters:
 		try {
-			HttpAdapter httpAdapter = new HttpAdapter(new File(Env.CONFIG_PATH + "/http-adapter.xml"));
+			HttpAdapter httpAdapter = new HttpAdapter(
+					new File(Env.CONFIG_PATH + "/http-adapter-ch.org"),
+					new File(Env.CONFIG_PATH + "/http-adapter-hw.org"));
 			adapters = List.of(httpAdapter); // Multiple adapters can be combined here
 			adapters.forEach(a -> a.addSubscribers(store));
-		} catch (ParserConfigurationException e) {
-			e.printStackTrace();
-			Logger.error("Failed to parse the HttpAdapter config file. Can't continue");
-			System.exit(3);
-		} catch (SAXException e) {
-			e.printStackTrace();
-			Logger.error("Failed to parse the HttpAdapter config file. Can't continue");
-			System.exit(2);
 		} catch (IOException e) {
 			e.printStackTrace();
 			Logger.error("Failed to load the adapters. Can't contiunue.");
