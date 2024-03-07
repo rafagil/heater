@@ -123,10 +123,16 @@ public class Api {
 		store.dispatch(new FloorUpdateAction(updatedFloor));
 	}
 
-	public static void syncAdapters() {
+	public static void syncAdapters(boolean turnOffHotWater) {
 		Logger.info("Synchronizing all adapters");
 		adapters.forEach(a -> a.sync(getCurrentState()));
-		turnOffHotWater();
+		if (turnOffHotWater) {
+			turnOffHotWater();
+		}
+	}
+
+	public static void syncAdapters() {
+		syncAdapters(true);
 	}
 
 	public static void updateTimers(Set<HotWaterTimer> timers) {

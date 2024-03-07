@@ -101,6 +101,7 @@ public class Scheduler {
 				items.stream()
 						.filter(byDayOfWeek(LocalDateTime.now().getDayOfWeek()))
 						.forEach(this::updateFloor);
+				Api.syncAdapters(false);
 			}
 		}, 60000);
 		new Thread(intervalThread).start();
