@@ -31,6 +31,9 @@
 			"name": "java.util.ImmutableCollections$Set12"
 		},
 		{
+			"name": "java.util.ImmutableCollections$SetN"
+		},
+		{
 			"name": "java.util.java.util.CollSer"
 		},
 		{
@@ -38,7 +41,10 @@
 		},
 		{
 			"name": "java.util.HashSet"
-		}
+		},
+	  {
+	    "name": "java.util.CollSer"
+	  }
 	],
 	"lambdaCapturingTypes": [],
 	"proxies": []
