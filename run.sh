@@ -1,3 +1,3 @@
 #!/bin/bash
-rm db/store.data
+rm db/temps.org
 mvn compile exec:java

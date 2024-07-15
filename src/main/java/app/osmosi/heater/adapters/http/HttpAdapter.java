@@ -33,46 +33,42 @@ public class HttpAdapter implements Adapter {
 				.collect(Collectors.groupingBy(CentralHeatingConfig::getFloorName));
 	}
 
-	private void doRequest(String urlString, String method, Optional<String> payload) {
+	private void handleSwitch(Switch state, RequestConfig config) {
+		String urlString = state == Switch.ON ? config.getOnURL() : config.getOffURL();
+		Optional<String> payload = state == Switch.ON ? config.getOnPayload() : config.getOffPayload();
 		if (Env.DEBUG) {
-			Logger.info(method + ": " + urlString);
+			Logger.info(config.getMethod() + ": " + urlString);
 			if (payload.isPresent()) {
 				Logger.info(payload.get());
 			}
 		} else {
-			try {
-				URL url = new URL(urlString);
-				HttpURLConnection con = (HttpURLConnection) url.openConnection();
-				con.setRequestMethod(method);
-				con.setRequestProperty("Content-Type", "application/json");
+			new Thread(() -> {
+				try {
+					URL url = new URL(urlString);
+					HttpURLConnection con = (HttpURLConnection) url.openConnection();
+					con.setRequestMethod(config.getMethod());
+					con.setRequestProperty("Content-Type", "application/json");
 
-				if (method.equals("POST") && payload.isPresent()) {
-					DataOutputStream wr;
-					con.setDoOutput(true);
-					wr = new DataOutputStream(con.getOutputStream());
-					wr.writeBytes(payload.get());
-					wr.flush();
-					wr.close();
-					Logger.debug("Payload sent:");
-					Logger.debug(payload);
+					if (config.getMethod().equals("POST") && payload.isPresent()) {
+						DataOutputStream wr;
+						con.setDoOutput(true);
+						wr = new DataOutputStream(con.getOutputStream());
+						wr.writeBytes(payload.get());
+						wr.flush();
+						wr.close();
+						Logger.debug("Payload sent:");
+						Logger.debug(payload);
+					}
+
+					Logger.debug("Response Code:");
+					Logger.debug(con.getResponseCode());
+
+					con.disconnect();
+				} catch (IOException e) {
+					MobileNotification.sendNotification("Unable to request the adapter: " + config.getIdentifier());
+					e.printStackTrace();
 				}
-
-				Logger.debug("Response Code:");
-				Logger.debug(con.getResponseCode());
-
-				con.disconnect();
-			} catch (IOException e) {
-				MobileNotification.sendNotification("Unable to request the adapter");
-				e.printStackTrace();
-			}
-		}
-	}
-
-	private void handleSwitch(Switch state, RequestConfig config) {
-		if (state == Switch.ON) {
-			doRequest(config.getOnURL(), config.getMethod(), config.getOnPayload());
-		} else {
-			doRequest(config.getOffURL(), config.getMethod(), config.getOffPayload());
+			}).start();
 		}
 	}
 
@@ -96,13 +92,17 @@ public class HttpAdapter implements Adapter {
 	@Override
 	public void addSubscribers(Store<AppState> store) {
 		Consumer<String> addSubscriber = name -> {
-			// Subscribe to changes in the heater state (ON/OFF):
-			store.subscribe(s -> s.getFloorByName(name).getHeaterState(),
-					appState -> handleFloor(appState.getFloorByName(name)));
+			if (store.getState().getFloorByName(name) != null) {
+				// Subscribe to changes in the heater state (ON/OFF):
+				store.subscribe(s -> s.getFloorByName(name).getHeaterState(),
+						appState -> handleFloor(appState.getFloorByName(name)));
 
-			// Subscribe to device changes to turn them off if not active:
-			store.subscribe(s -> s.getFloorByName(name).getActiveDevices(),
-					appState -> turnOffUnusedDevices(appState.getFloorByName(name)));
+				// Subscribe to device changes to turn them off if not active:
+				store.subscribe(s -> s.getFloorByName(name).getActiveDevices(),
+						appState -> turnOffUnusedDevices(appState.getFloorByName(name)));
+			} else {
+				Logger.info("Not using Adapter for Zone " + name);
+			}
 		};
 
 		// Adds Central Heating Subscribers

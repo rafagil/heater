@@ -4,18 +4,22 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import app.osmosi.heater.adapters.Adapter;
 import app.osmosi.heater.adapters.http.HttpAdapter;
 import app.osmosi.heater.model.AppState;
-import app.osmosi.heater.model.Device;
 import app.osmosi.heater.model.Floor;
 import app.osmosi.heater.model.HotWater;
 import app.osmosi.heater.model.HotWaterTimer;
 import app.osmosi.heater.model.Switch;
-import app.osmosi.heater.store.AppStatePersister;
+import app.osmosi.heater.model.ZoneConfig;
+import app.osmosi.heater.store.TemperatureStatePersister;
 import app.osmosi.heater.store.Store;
 import app.osmosi.heater.store.actions.FloorUpdateAction;
 import app.osmosi.heater.store.actions.HotWaterUpdateAction;
@@ -28,6 +32,7 @@ import app.osmosi.heater.utils.Logger;
 public class Api {
 	private static Store<AppState> store;
 	private static List<Adapter> adapters;
+	private static final String ZONE_CONFIG_PATH = Env.CONFIG_PATH + "/zones.org";
 
 	private Api() {
 	}
@@ -39,27 +44,42 @@ public class Api {
 		adapters.forEach(a -> a.addSubscribers(store));
 	}
 
-	public static void init() {
-		AppReducer reducer = new AppReducer();
-		try {
-			AppState persisted = AppStatePersister.loadState();
-			store = new Store<AppState>(persisted, reducer);
-		} catch (IOException e) {
-			Logger.info("Failed to load persisted state. Falling back to a clean state");
-			Set<Device> activeDevices = Set.of(Device.values());
-			store = new Store<AppState>(new AppState(
-					new HotWater(Switch.OFF),
-					Set.of(),
-					new Floor("Cima", 0, 0, 99, Switch.OFF, 0, activeDevices),
-					new Floor("Baixo", 0, 0, 99, Switch.OFF, 0, activeDevices),
-					new Floor("Suite", 0, 0, 99, Switch.OFF, 0, Set.of(Device.ELECTRIC)),
-					new Floor("Office", 0, 0, 99, Switch.OFF, 0, Set.of(Device.ELECTRIC))),
-					reducer);
-		} catch (ClassNotFoundException e) {
-			Logger.error("ClassNotFoundException. Shouldn't happen, shutting Down.");
-			e.printStackTrace();
-			System.exit(10);
-		}
+	private static Floor[] loadZones(Map<String, Double> persistedTemps) throws IOException {
+		List<ZoneConfig> configs = ZoneConfigParser.parse(new File(ZONE_CONFIG_PATH));
+
+		Function<ZoneConfig, Floor> toFloor = config -> {
+			Double temp = persistedTemps.get(config.getZone());
+			temp = temp == null ? 99 : temp;
+			return new Floor(config.getZone(), 0, 0, temp, Switch.OFF, 0, Set.of(config.getDevice()));
+		};
+
+		BinaryOperator<Floor> merge = (f1, f2) -> {
+			if (f1 == null) {
+				return f2;
+			}
+
+			return f1.withActiveDevices(
+					Stream.concat(
+							f1.getActiveDevices().stream(),
+							f2.getActiveDevices().stream())
+							.collect(Collectors.toSet()));
+		};
+
+		return configs.stream()
+				.filter(ZoneConfig::isEnabled)
+				.map(toFloor)
+				.collect(Collectors.groupingBy(
+						Floor::getName,
+						Collectors.reducing(null, merge)))
+				.values()
+				.stream()
+				.toArray(Floor[]::new);
+	}
+
+	public static void init() throws IOException {
+		Floor[] zones = loadZones(TemperatureStatePersister.load());
+
+		store = new Store<AppState>(new AppState(new HotWater(Switch.OFF), Set.of(), zones), new AppReducer());
 
 		// Adapters:
 		try {
@@ -74,8 +94,8 @@ public class Api {
 			System.exit(1);
 		}
 
-		// Persist all changes of AppState:
-		store.subscribe(s -> s, AppStatePersister::persist);
+		// Persist the temperatures
+		store.subscribe(s -> s, TemperatureStatePersister::persist);
 	}
 
 	private static Floor updateHeaterState(final Floor f) {

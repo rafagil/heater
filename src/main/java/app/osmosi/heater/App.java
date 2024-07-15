@@ -157,9 +157,13 @@ public class App {
 	}
 
 	public static void main(String[] args) throws IOException {
-		Logger.setLogLevel(LogLevel.INFO);
+		if (Env.DEBUG) {
+			Logger.setLogLevel(LogLevel.DEBUG);
+			Logger.debug("Running in DEBUG mode");
+		} else {
+			Logger.setLogLevel(LogLevel.INFO);
+		}
 		Api.init();
-		Api.syncAdapters();
 
 		AppController app = new AppController();
 		// General:
@@ -200,16 +204,12 @@ public class App {
 			app.get("/zones/" + name + "/targetTemperature", handleTargetState(name), "value");
 		});
 
-		if (Api.getCurrentState().getTimers().isEmpty()) { // TODO: check if file has changed?
+		if (Api.getCurrentState().getTimers().isEmpty()) { // TODO: Maybe not necessary since we no longer save state
 			hwTimer.reloadTimers();
 		}
-		hwTimer.start();
 		scheduler.start();
+		hwTimer.start();
 		Monitor.start();
-
-		if (Env.DEBUG) {
-			Logger.info("Running in DEBUG mode");
-		}
 
 		int port = 9768;
 		if (args.length > 0) {

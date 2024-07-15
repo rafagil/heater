@@ -13,12 +13,13 @@ public class HttpAdapterConfig {
 	private final RequestConfig hotWater;
 
 	private RequestConfig parseRequest(Map<String, String> row) {
+		String identifier = row.get("identifier");
 		String onURL = row.get("url on");
 		String offURL = row.get("url off");
 		String method = row.get("method");
 		String onPayload = row.get("payload on");
 		String offPayload = row.get("payload off");
-		return new RequestConfig(onURL, offURL, method, onPayload, offPayload);
+		return new RequestConfig(identifier, onURL, offURL, method, onPayload, offPayload);
 	}
 
 	private CentralHeatingConfig parseCHConfig(Map<String, String> row) {

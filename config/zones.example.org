@@ -1,0 +1,10 @@
+|--------+----------+---------|
+| Zone   | Device   | Enabled |
+|--------+----------+---------|
+| Cima   | GAS      | yes     |
+| Cima   | ELECTRIC | no      |
+| Baixo  | GAS      | yes     |
+| Baixo  | ELECTRIC | no      |
+| Suite  | ELECTRIC | no      |
+| Office | ELECTRIC | no      |
+|--------+----------+---------|

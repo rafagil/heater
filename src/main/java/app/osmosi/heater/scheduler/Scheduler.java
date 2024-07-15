@@ -95,6 +95,9 @@ public class Scheduler {
 		Map<Integer, List<ScheduleItem>> scheduleMap = currentSchedule.stream()
 				.collect(Collectors.groupingBy(ScheduleItem::getTotalMinutes));
 
+		// Ensures everything is sync'd:
+		Api.syncAdapters();
+
 		intervalThread = new IntervalThread(() -> {
 			List<ScheduleItem> items = scheduleMap.get(getNowMinutes());
 			if (items != null) {
