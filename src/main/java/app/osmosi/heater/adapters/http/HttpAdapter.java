@@ -42,7 +42,6 @@ public class HttpAdapter implements Adapter {
 				Logger.info(payload.get());
 			}
 		} else {
-			new Thread(() -> {
 				try {
 					URL url = new URL(urlString);
 					HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -68,7 +67,6 @@ public class HttpAdapter implements Adapter {
 					MobileNotification.sendNotification("Unable to request the adapter: " + config.getIdentifier());
 					e.printStackTrace();
 				}
-			}).start();
 		}
 	}
 
