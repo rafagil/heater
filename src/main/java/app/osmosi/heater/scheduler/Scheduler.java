@@ -79,8 +79,10 @@ public class Scheduler {
 
 	public void updateFloor(ScheduleItem item) {
 		Floor floor = Api.getCurrentState().getFloorByName(item.getFloorName());
-		Api.updateFloor(floor.withDesiredTemp(item.getDesiredTemp())
-				.withActiveDevices(item.getDevices()));
+		if (floor != null) {
+			Api.updateFloor(floor.withDesiredTemp(item.getDesiredTemp())
+					.withActiveDevices(item.getDevices()));
+		}
 	}
 
 	public Predicate<ScheduleItem> byDayOfWeek(DayOfWeek dayOfWeek) {
